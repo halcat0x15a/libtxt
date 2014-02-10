@@ -1,5 +1,5 @@
 (ns txtlib.core.buffer
-  (:refer-clojure :exclude [char empty complement])
+  (:refer-clojure :exclude [char chars empty complement])
   (:require [txtlib.core :as core]
             [clojure.string :as string]))
 
@@ -15,9 +15,13 @@
   {:left #"\w+\W*\z"
    :right #"\A\W*\w+"})
 
-(def line
+(def chars
   {:left #"[^\n]*\z"
    :right #"\A[^\n]*"})
+
+(def line
+  {:left #"\n[^\n]*\z"
+   :right #"\A[^\n]*\n"})
 
 (defrecord Buffer [left right mark])
 

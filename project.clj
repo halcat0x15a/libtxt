@@ -7,4 +7,7 @@
                  [org.clojure/test.generative "0.5.1"]]
   :resource-paths [~(str (System/getProperty "java.home") "/lib/jfxrt.jar")]
   :plugins [[lein-cljsbuild "1.0.2"]]
-  :cljsbuild {:builds []})
+  :cljsbuild {:builds []}
+  :global-vars {*warn-on-reflection* true}
+  :aot [txtlib.jvm]
+  :main txtlib.jvm)

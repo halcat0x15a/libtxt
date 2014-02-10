@@ -24,8 +24,5 @@
       (zip/insert-child (change value))
       zip/down))
 
-(defn update [history f & args]
-  (let [value (present history)]
-    (-> history
-        (commit value)
-        (zip/edit f args))))
+(defn edit [history f & args]
+  (apply zip/edit history update-in [:present] f args))
