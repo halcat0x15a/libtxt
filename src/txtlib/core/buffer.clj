@@ -1,7 +1,6 @@
 (ns txtlib.core.buffer
   (:refer-clojure :exclude [char chars empty complement])
-  (:require [txtlib.core :as core]
-            [clojure.string :as string]))
+  (:require [clojure.string :as string]))
 
 (def complement
   {:left :right
@@ -30,8 +29,11 @@
 
 (def empty (buffer ""))
 
-(defn show [{:keys [left right]}]
-  (str left right))
+(defn show
+  ([buffer]
+     (show buffer ""))
+  ([{:keys [left right]} sep]
+     (str left sep right)))
 
 (defn cursor [{:keys [left]}]
   (count left))
@@ -73,9 +75,13 @@
 (defn deselect [buffer]
   (assoc buffer :mark nil))
 
-(defn copy [{:keys [mark] :as buffer}]
+(defn selection [{:keys [mark] :as buffer}]
   (if mark
-    (apply subs (show buffer) (sort [(cursor buffer) mark]))))
+    (sort [(cursor buffer) mark])))
+
+(defn copy [buffer]
+  (if-let [selection (selection buffer)]
+    (apply subs (show buffer) selection)))
 
 (defn cut [{:keys [mark] :as buffer}]
   (if mark

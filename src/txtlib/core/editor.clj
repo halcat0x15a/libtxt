@@ -3,6 +3,7 @@
             [txtlib.core.history :as history]))
 
 (defprotocol Editor
+  (render [editor renderer])
   (run [editor input]))
 
 (defn show [editor]
