@@ -1,5 +1,5 @@
 (ns txtlib.core.buffer
-  (:refer-clojure :exclude [char chars empty complement])
+  (:refer-clojure :exclude [char chars keep empty complement])
   (:require [clojure.string :as string]))
 
 (def complement
@@ -22,6 +22,10 @@
   {:left #"\n[^\n]*\z"
    :right #"\A[^\n]*\n"})
 
+(def all
+  {:left #"[\s\S]*\z"
+   :right #"\A[\s\S]*"})
+
 (defrecord Buffer [left right mark])
 
 (defn buffer [string]
@@ -29,14 +33,40 @@
 
 (def empty (buffer ""))
 
-(defn show
-  ([buffer]
-     (show buffer ""))
-  ([{:keys [left right]} sep]
-     (str left sep right)))
+(defn show [{:keys [left right]}]
+  (str left right))
 
 (defn cursor [{:keys [left]}]
   (count left))
+
+(defn mark [buffer]
+  (assoc buffer :mark (cursor buffer)))
+
+(defn activate [buffer]
+  (if (:mark buffer)
+    buffer
+    (mark buffer)))
+
+(defn deactivate [buffer]
+  (assoc buffer :mark nil))
+
+(defn changed? [buffer]
+  (-> buffer
+      meta
+      ::changed?))
+
+(defn touch [buffer]
+  (-> buffer
+      (vary-meta assoc ::changed? true)
+      deactivate))
+
+(defn save [buffer]
+  (vary-meta buffer dissoc ::changed?))
+
+(defn keep [buffer previous]
+  (-> buffer
+      (assoc :mark (:mark previous))
+      (with-meta (meta previous))))
 
 (defn- string-insert [string key value]
   (case key
@@ -44,7 +74,9 @@
     :right (str value string)))
 
 (defn insert [buffer key value]
-  (update-in buffer [key] string-insert key value))
+  (-> buffer
+      touch
+      (update-in [key] string-insert key value)))
 
 (defn- string-delete [string key n]
   (case key
@@ -57,7 +89,9 @@
        (delete buffer :right n)
        (delete buffer :left (- n))))
   ([buffer key n]
-     (update-in buffer [key] string-delete key n)))
+     (-> buffer
+         touch
+         (update-in [key] string-delete key n))))
 
 (defn delete-matches [buffer key regex]
   (delete buffer key (count (re-find (key regex) (key buffer)))))
@@ -66,14 +100,9 @@
   (if-let [result (re-find (key regex) (key buffer))]
     (-> buffer
         (delete key (count result))
-        (insert (complement key) result))
+        (insert (complement key) result)
+        (keep buffer))
     buffer))
-
-(defn select [buffer]
-  (assoc buffer :mark (cursor buffer)))
-
-(defn deselect [buffer]
-  (assoc buffer :mark nil))
 
 (defn selection [{:keys [mark] :as buffer}]
   (if mark

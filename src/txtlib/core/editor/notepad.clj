@@ -8,27 +8,44 @@
 (def style
   {:cursor (format/->Color "white" "black")
    :selection (format/->Color "white" "gray")
-   :symbol (format/->Color "blue" "white")
-   :string (format/->Color "maroon" "white")
-   :keyword (format/->Color "aqua" "white")
-   :special (format/->Color "magenta" "white")
    :default (format/->Color "black" "white")})
 
 (def keymap
-  {:left #(editor/move % :left buffer/char)
-   :right #(editor/move % :right buffer/char)
-   :up #(editor/move % :left buffer/line)
-   :down #(editor/move % :right buffer/line)})
+  {#{:enter} #(-> % editor/commit (editor/insert :left \newline))
+   #{:bs} #(-> % editor/commit (editor/delete :left buffer/char))
+   #{:left} #(editor/move % :left buffer/char)
+   #{:right} #(editor/move % :right buffer/char)
+   #{:up} #(editor/move % :left buffer/line)
+   #{:down} #(editor/move % :right buffer/line)
+   #{:left :shift} #(-> % editor/activate (editor/move :left buffer/char))
+   #{:right :shift} #(-> % editor/activate (editor/move :right buffer/char))
+   #{:up :shift} #(-> % editor/activate (editor/move :left buffer/line))
+   #{:down :shift} #(-> % editor/activate (editor/move :right buffer/line))
+   #{:A :ctrl} #(-> % (editor/move :left buffer/all) editor/mark (editor/move :right buffer/all))
+   #{:Z :ctrl} #(-> % editor/deactivate editor/undo)
+   #{:C :ctrl} #(-> % editor/copy editor/deactivate)
+   #{:X :ctrl} #(-> % editor/commit editor/cut editor/deactivate)
+   #{:V :ctrl} #(-> % editor/commit editor/deactivate editor/paste)})
 
-(defrecord Notepad [current clipboard]
+(defrecord Notepad [buffer clipboard keymap]
+  editor/Clipboard
+  (clipboard [editor] clipboard)
+  (clipboard [editor clipboard] (assoc editor :clipboard clipboard))
   editor/Editor
+  (buffer [editor] buffer)
+  (buffer [editor buffer] (assoc editor :buffer buffer))
   (render [editor renderer]
-    (renderer style (-> current history/present plain/parser)))
-  (run [editor input]
-    (if-let [f (get keymap input)]
+    (renderer style (-> buffer history/present plain/parse)))
+  (run [editor {:keys [char key modifiers] :as input}]
+    (if-let [f (get keymap (conj modifiers key))]
       (f editor)
-      (if (char? input)
-        (editor/insert editor :left input)
+      (if char
+        (-> editor
+            editor/commit
+            (editor/insert :left char))
         editor))))
 
-(def notepad (Notepad. (history/history buffer/empty) (history/history "")))
+(defn notepad [map]
+  (Notepad. (history/history buffer/empty)
+            (history/history "")
+            (merge keymap map)))

@@ -14,9 +14,15 @@
 (defn present [history]
   (-> history zip/node :present))
 
-(def undo zip/up)
+(defn undo [history]
+  (if-let [history (zip/up history)]
+    history
+    history))
 
-(def redo zip/down)
+(defn redo [history]
+  (if-let [history (zip/down history)]
+    history
+    history))
 
 (defn commit [history value]
   (-> history

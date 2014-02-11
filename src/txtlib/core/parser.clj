@@ -16,13 +16,20 @@
   (cond (string? x) x
         (vector? x) (first x)))
 
-(defn parse [pattern input]
-  (if-let [result (->> input (re-find pattern) extract)]
-    (Success. result (subs input (count result)))
-    (Failure. input)))
+(defn regex
+  ([pattern] (partial regex pattern))
+  ([pattern input]
+     (if-let [result (->> input (re-find pattern) extract)]
+       (Success. result (subs input (count result)))
+       (Failure. input))))
 
-(defn parser [pattern]
-  (fn [input] (parse pattern input)))
+(defn string
+  ([pattern] (partial string pattern))
+  ([pattern input]
+     (let [length (count pattern)]
+       (cond (< (count input) length) (Failure. input)
+             (= (subs input 0 length) pattern) (Success. pattern (subs input length))
+             :else (Failure. input)))))
 
 (defn many [parser]
   (fn [input]

@@ -26,7 +26,7 @@
 
 (defspec copy-and-paste
   (fn [buffer key regex]
-    (let [buffer (-> buffer buffer/select (buffer/move key regex))]
+    (let [buffer (-> buffer buffer/mark (buffer/move key regex))]
       (-> buffer buffer/cut (buffer/insert key (buffer/copy buffer)))))
   [^{:tag `buffer} buffer ^{:tag `key} key ^{:tag `regex} regex]
   (assert (= (buffer/show %) (buffer/show buffer))))
