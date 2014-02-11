@@ -4,8 +4,7 @@
             [txtlib.core.format :as format]
             [txtlib.core.editor :as editor]
             [txtlib.core.editor.notepad :as notepad])
-  (:gen-class
-   :extends javafx.application.Application)
+  (:gen-class :extends javafx.application.Application)
   (:import [javafx.application Application]
            [javafx.event EventHandler]
            [javafx.stage Stage FileChooser]
