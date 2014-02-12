@@ -6,6 +6,7 @@
             [txtlib.core.editor.notepad :as notepad])
   (:gen-class :extends javafx.application.Application)
   (:import [javafx.application Application]
+           [javafx.beans.value ChangeListener]
            [javafx.event EventHandler]
            [javafx.stage Stage FileChooser]
            [javafx.scene Scene]
@@ -53,15 +54,20 @@
    #{:S :ctrl} #(save % stage)})
 
 (defn -start [this ^Stage stage]
-  (let [editor (atom (notepad/notepad (keymap stage)))
+  (let [editor (atom (notepad/notepad (keymap stage) (format/->Rectangle 0 0 0 0)))
         view (doto (WebView.)
                (.setContextMenuEnabled false))
-        handler (reify EventHandler
+        key-press (reify EventHandler
                   (handle [this event]
                     (swap! editor editor/run (input event))
                     (-> view .getEngine (.loadContent (editor/render @editor format/html)))))
         scene (doto (Scene. view)
-                (.setOnKeyPressed handler))]
+                (.setOnKeyPressed key-press))]
+    (.. view
+        heightProperty
+        (addListener (reify ChangeListener
+                       (changed [this observable old new]
+                         (swap! editor assoc-in [:bounds :height] (int (/ new 16)))))))
     (doto stage
       (.setTitle "txtlib")
       (.setScene scene)

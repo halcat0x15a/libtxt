@@ -1,9 +1,11 @@
 (ns txtlib.core.editor
   (:require [txtlib.core.buffer :as buffer]
-            [txtlib.core.history :as history]))
+            [txtlib.core.history :as history]
+            [txtlib.core.format :as format]))
 
 (defprotocol Editor
   (buffer [editor] [editor buffer])
+  (bounds [editor] [editor bounds])
   (render [editor renderer])
   (run [editor input]))
 
@@ -76,3 +78,6 @@
 
 (defn path [editor]
   (-> editor buffer meta ::path))
+
+(defn compute [editor]
+  (update editor bounds format/compute (-> editor buffer history/present)))

@@ -39,6 +39,10 @@
 (defn cursor [{:keys [left]}]
   (count left))
 
+(defn position [{:keys [left]}]
+  [(count (re-find #"[^\n]*\z" left))
+   (dec (count (string/split left #"\n" -1)))])
+
 (defn mark [buffer]
   (assoc buffer :mark (cursor buffer)))
 
