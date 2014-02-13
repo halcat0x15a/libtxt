@@ -14,7 +14,7 @@
            [javafx.scene.input KeyCode KeyEvent]))
 
 (def special
-  {KeyCode/BACK_SPACE :bs
+  {KeyCode/BACK_SPACE :backspace
    KeyCode/ENTER :enter
    KeyCode/LEFT :left
    KeyCode/RIGHT :right
@@ -54,7 +54,7 @@
    #{:S :ctrl} #(save % stage)})
 
 (defn -start [this ^Stage stage]
-  (let [editor (atom (notepad/notepad (keymap stage) (format/->Rectangle 0 0 0 0)))
+  (let [editor (atom (notepad/notepad (keymap stage)))
         view (doto (WebView.)
                (.setContextMenuEnabled false))
         key-press (reify EventHandler
@@ -67,7 +67,7 @@
         heightProperty
         (addListener (reify ChangeListener
                        (changed [this observable old new]
-                         (swap! editor assoc-in [:bounds :height] (int (/ new 16)))))))
+                         (swap! editor assoc-in [:style :height] (int (/ new 16)))))))
     (doto stage
       (.setTitle "txtlib")
       (.setScene scene)

@@ -6,14 +6,19 @@
             [txtlib.core.parser.plain :as plain]))
 
 (def style
-  {:cursor (format/->Color "white" "black")
-   :selection (format/->Color "white" "gray")
-   :default (format/->Color "black" "white")
-   :font-size 16})
+  (format/map->Style
+   {:color (format/->Color "black" "white")
+    :cursor (format/->Color "white" "black")
+    :selection (format/->Color "white" "gray")
+    :fontsize 16
+    :x 0
+    :y 0
+    :width 0
+    :height 0}))
 
 (def keymap
   {#{:enter} #(-> % editor/commit (editor/insert :left \newline))
-   #{:bs} #(-> % editor/commit (editor/delete :left buffer/char))
+   #{:backspace} #(-> % editor/commit (editor/delete :left buffer/char))
    #{:left} #(editor/move % :left buffer/char)
    #{:right} #(editor/move % :right buffer/char)
    #{:up} #(editor/move % :left buffer/line)
@@ -28,29 +33,27 @@
    #{:X :ctrl} #(-> % editor/commit editor/cut editor/deactivate)
    #{:V :ctrl} #(-> % editor/commit editor/deactivate editor/paste)})
 
-(defrecord Notepad [buffer clipboard keymap bounds]
+(defrecord Notepad [buffer clipboard keymap style]
   editor/Clipboard
   (clipboard [editor] clipboard)
   (clipboard [editor clipboard] (assoc editor :clipboard clipboard))
   editor/Editor
   (buffer [editor] buffer)
   (buffer [editor buffer] (assoc editor :buffer buffer))
-  (bounds [editor] bounds)
-  (bounds [editor bounds] (assoc editor :bounds bounds))
+  (style [editor] style)
+  (style [editor style] (assoc editor :style style))
   (render [editor renderer]
-    (-> buffer history/present plain/parse (renderer (assoc style :bounds bounds))))
+    (-> buffer history/present plain/parse (renderer style)))
   (run [editor {:keys [char key modifiers] :as input}]
     (if-let [f (get keymap (conj modifiers key))]
       (-> editor f editor/compute)
       (if char
-        (-> editor
-            editor/commit
-            (editor/insert :left char)
-            editor/compute)
+        (-> editor editor/commit (editor/insert :left char) editor/compute)
         editor))))
 
-(defn notepad [map bounds]
-  (Notepad. (history/history buffer/empty)
-            (history/history "")
-            (merge keymap map)
-            bounds))
+(defn notepad [map]
+  (Notepad.
+   (history/history buffer/empty)
+   (history/history "")
+   (merge keymap map)
+   style))

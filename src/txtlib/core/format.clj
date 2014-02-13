@@ -6,7 +6,7 @@
 
 (defrecord Color [foreground background])
 
-(defrecord Rectangle [x y width height])
+(defrecord Style [color cursor selection fontsize x y width height])
 
 (def special
   {\< "&lt;"
@@ -23,13 +23,13 @@
 (defn view [string {:keys [x y width height]}]
   (->> (string/split string #"\n" -1)
        (drop y)
-       (take (inc height))
+       (take height)
        (string/join \newline)))
 
 (defn html
-  ([node style]
-     (str (format "<pre style=\"font-size:%spx;\">" (:font-size style))
-          (view (html node style (:default style)) (:bounds style))
+  ([node {:keys [color fontsize] :as style}]
+     (str (format "<pre style=\"font-size:%spx;\">" fontsize)
+          (view (html node style color) style)
           "</pre>"))
   ([{:keys [name value] :as node} style color]
      (cond (vector? node) (->> node (map #(html % style color)) string/join)
@@ -55,7 +55,8 @@
           :else (str left focus right))))
 
 (defn compute [{:keys [x y width height] :as bounds} buffer]
-  (let [[a b] (buffer/position buffer)]
+  (let [[a b] (buffer/position buffer)
+        height (dec height)]
     (cond (< b y) (assoc bounds :y b)
           (> b (+ y height)) (assoc bounds :y (- b height))
           :else bounds)))

@@ -5,7 +5,7 @@
 
 (defprotocol Editor
   (buffer [editor] [editor buffer])
-  (bounds [editor] [editor bounds])
+  (style [editor] [editor style])
   (render [editor renderer])
   (run [editor input]))
 
@@ -80,4 +80,4 @@
   (-> editor buffer meta ::path))
 
 (defn compute [editor]
-  (update editor bounds format/compute (-> editor buffer history/present)))
+  (update editor style format/compute (-> editor buffer history/present)))
