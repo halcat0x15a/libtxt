@@ -58,9 +58,9 @@
         view (doto (WebView.)
                (.setContextMenuEnabled false))
         key-press (reify EventHandler
-                  (handle [this event]
-                    (swap! editor editor/run (input event))
-                    (-> view .getEngine (.loadContent (editor/render @editor format/html)))))
+                    (handle [this event]
+                      (swap! editor editor/run (input event))
+                      (-> view .getEngine (.loadContent (editor/render @editor format/html)))))
         scene (doto (Scene. view)
                 (.setOnKeyPressed key-press))]
     (.. view

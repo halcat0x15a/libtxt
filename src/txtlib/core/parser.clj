@@ -61,3 +61,8 @@
       (cond (and value (nil? parser)) (map result #(%))
             value (recur (map (parser next) (partial partial value)) parsers)
             :else (Failure. input)))))
+
+(defn one [input]
+  (if-not (empty? input)
+    (Success. (subs input 0 1) (subs input 1))
+    (Failure. input)))

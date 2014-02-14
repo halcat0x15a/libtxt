@@ -7,7 +7,7 @@
   (parser/chain
    (fn [_ value _] (format/->Label :cursor value))
    (parser/string format/negative)
-   (parser/regex #"[\s\S]")
+   parser/one
    (parser/string format/normal)))
 
 (def selection
@@ -20,7 +20,7 @@
      (parser/chain
       (fn [_ value] value)
       (parser/not (parser/string format/normal))
-      (parser/regex #"[\s\S]"))))
+      parser/one)))
    (parser/string format/normal)))
 
 (def parser
@@ -28,7 +28,7 @@
    (parser/choice
     cursor
     selection
-    (parser/regex #"[\s\S]"))))
+    parser/one)))
 
 (defn parse [buffer]
-  (-> buffer format/show parser :value))
+  (-> buffer format/show parser :value time))

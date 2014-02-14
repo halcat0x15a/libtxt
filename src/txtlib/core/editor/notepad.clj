@@ -1,6 +1,7 @@
 (ns txtlib.core.editor.notepad
   (:require [txtlib.core.buffer :as buffer]
             [txtlib.core.history :as history]
+            [txtlib.core.frame :as frame]
             [txtlib.core.editor :as editor]
             [txtlib.core.format :as format]
             [txtlib.core.parser.plain :as plain]))
@@ -31,21 +32,22 @@
    #{:Z :ctrl} #(-> % editor/deactivate editor/undo)
    #{:C :ctrl} #(-> % editor/copy editor/deactivate)
    #{:X :ctrl} #(-> % editor/commit editor/cut editor/deactivate)
-   #{:V :ctrl} #(-> % editor/commit editor/deactivate editor/paste)})
+   #{:V :ctrl} #(-> % editor/commit editor/deactivate editor/paste)
+   #{:F :ctrl} editor/search})
 
-(defrecord Notepad [buffer clipboard keymap style]
+(defrecord Notepad [frame clipboard style]
   editor/Clipboard
   (clipboard [editor] clipboard)
   (clipboard [editor clipboard] (assoc editor :clipboard clipboard))
   editor/Editor
-  (buffer [editor] buffer)
-  (buffer [editor buffer] (assoc editor :buffer buffer))
+  (frame [editor] frame)
+  (frame [editor frame] (assoc editor :frame frame))
   (style [editor] style)
   (style [editor style] (assoc editor :style style))
   (render [editor renderer]
-    (-> buffer history/present plain/parse (renderer style)))
+    (-> editor editor/buffer plain/parse (renderer style)))
   (run [editor {:keys [char key modifiers] :as input}]
-    (if-let [f (get keymap (conj modifiers key))]
+    (if-let [f (get (editor/keymap editor) (conj modifiers key))]
       (-> editor f editor/compute)
       (if char
         (-> editor editor/commit (editor/insert :left char) editor/compute)
@@ -53,7 +55,6 @@
 
 (defn notepad [map]
   (Notepad.
-   (history/history buffer/empty)
+   (frame/frame "*scratch*" (editor/->Window (history/history buffer/empty) (merge keymap map)))
    (history/history "")
-   (merge keymap map)
    style))

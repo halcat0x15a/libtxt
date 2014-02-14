@@ -11,8 +11,11 @@
 (defn history [value]
   (zip/zipper :future :future make-node (change value)))
 
-(defn present [history]
-  (-> history zip/node :present))
+(defn present
+  ([history]
+     (-> history zip/node :present))
+  ([history value]
+     (zip/edit history assoc :present value)))
 
 (defn undo [history]
   (if-let [history (zip/up history)]

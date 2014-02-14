@@ -1,21 +1,30 @@
 (ns txtlib.core.editor
-  (:require [txtlib.core.buffer :as buffer]
+  (:require [txtlib.core.lens :refer :all]
+            [txtlib.core.buffer :as buffer]
             [txtlib.core.history :as history]
+            [txtlib.core.frame :as frame]
             [txtlib.core.format :as format]))
 
+(defrecord Window [buffer keymap])
+
 (defprotocol Editor
-  (buffer [editor] [editor buffer])
+  (frame [editor] [editor frame])
   (style [editor] [editor style])
   (render [editor renderer])
   (run [editor input]))
 
 (defprotocol Clipboard
-  (clipboard [editor] [editor buffer]))
+  (clipboard [editor] [editor clipboard]))
 
 (defrecord Input [char key modifiers])
 
-(defn update [editor lens f & args]
-  (lens editor (apply f (lens editor) args)))
+(def window (compose frame/current frame))
+
+(def history (compose (lens :buffer) window))
+
+(def buffer (compose history/present history))
+
+(def keymap (compose (lens :keymap) window))
 
 (defn input
   ([char key modifiers]
@@ -28,56 +37,64 @@
           (Input. char key))))
 
 (defn show [editor]
-  (-> editor buffer history/present buffer/show))
+  (-> editor buffer buffer/show))
 
 (defn insert [editor key value]
-  (update editor buffer history/edit buffer/insert key value))
+  (update editor buffer buffer/insert key value))
 
 (defn delete [editor key regex]
-  (update editor buffer history/edit buffer/delete-matches key regex))
+  (update editor buffer buffer/delete-matches key regex))
 
 (defn move [editor key regex]
-  (update editor buffer history/edit buffer/move key regex))
+  (update editor buffer buffer/move key regex))
 
 (defn mark [editor]
-  (update editor buffer history/edit buffer/mark))
+  (update editor buffer buffer/mark))
 
 (defn activate [editor]
-  (update editor buffer history/edit buffer/activate))
+  (update editor buffer buffer/activate))
 
 (defn deactivate [editor]
-  (update editor buffer history/edit buffer/deactivate))
+  (update editor buffer buffer/deactivate))
 
 (defn copy [editor]
-  (if-let [string (-> editor buffer history/present buffer/copy)]
+  (if-let [string (-> editor buffer buffer/copy)]
     (update editor clipboard history/commit string)
     editor))
 
 (defn cut [editor]
   (-> editor
       copy
-      (update buffer history/edit buffer/cut)))
+      (update history history/edit buffer/cut)))
 
 (defn paste [editor]
   (insert editor :left (-> editor clipboard history/present)))
 
 (defn undo [editor]
-  (update editor buffer history/undo))
+  (update editor history history/undo))
 
 (defn commit [editor]
-  (update editor buffer history/commit (-> editor buffer history/present)))
+  (update editor history history/commit (buffer editor)))
 
 (defn changed? [editor]
-  (-> editor buffer history/present buffer/changed?))
+  (-> editor buffer buffer/changed?))
 
 (defn open [editor path string]
-  (buffer editor (vary-meta (history/history (buffer/buffer string)) assoc ::path path)))
+  (update editor frame frame/open path (history/history (buffer/buffer string))))
 
 (defn save [editor]
-  (update editor buffer history/edit buffer/save))
+  (update editor buffer buffer/save))
 
 (defn path [editor]
-  (-> editor buffer meta ::path))
+  (-> editor frame :key))
 
 (defn compute [editor]
-  (update editor style format/compute (-> editor buffer history/present)))
+  (update editor style format/compute (buffer editor)))
+
+(defn search [editor]
+  (let [keymap {#{:enter} #(-> %
+                               (update frame frame/switch (path editor))
+                               (update buffer buffer/search :right (show %)))
+                #{:backspace} #(delete % :left buffer/char)}
+        minibuffer (Window. (history/history buffer/empty) keymap)]
+    (update editor frame frame/open "*minibuffer*" minibuffer)))

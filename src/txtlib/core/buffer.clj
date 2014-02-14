@@ -7,24 +7,24 @@
    :right :left})
 
 (def char
-  {:left #"[\s\S]\z"
-   :right #"\A[\s\S]"})
+  {:left #"([\s\S])\z"
+   :right #"\A([\s\S])"})
 
 (def word
-  {:left #"\w+\W*\z"
-   :right #"\A\W*\w+"})
+  {:left #"(\w+\W*)\z"
+   :right #"\A(\W*\w+)"})
 
 (def chars
-  {:left #"[^\n]*\z"
-   :right #"\A[^\n]*"})
+  {:left #"([^\n\r]*)\z"
+   :right #"\A([^\n\r]*)"})
 
 (def line
-  {:left #"\n[^\n]*\z"
-   :right #"\A[^\n]*\n"})
+  {:left #"([\n\r][^\n\r]*)\z"
+   :right #"\A([^\n\r]*[\n\r])"})
 
 (def all
-  {:left #"[\s\S]*\z"
-   :right #"\A[\s\S]*"})
+  {:left #"([\s\S]*)\z"
+   :right #"\A([\s\S]*)"})
 
 (defrecord Buffer [left right mark])
 
@@ -100,11 +100,15 @@
 (defn delete-matches [buffer key regex]
   (delete buffer key (count (re-find (key regex) (key buffer)))))
 
+(defn overwrite [buffer key value]
+  (-> buffer
+      (delete key (count value))
+      (insert (complement key) value)))
+
 (defn move [buffer key regex]
-  (if-let [result (re-find (key regex) (key buffer))]
+  (if-let [[_ result] (re-find (key regex) (key buffer))]
     (-> buffer
-        (delete key (count result))
-        (insert (complement key) result)
+        (overwrite key result)
         (keep buffer))
     buffer))
 
@@ -120,3 +124,9 @@
   (if mark
     (delete buffer (- mark (cursor buffer)))
     buffer))
+
+(defn search [buffer key pattern]
+  (let [pattern (string/re-quote-replacement pattern)
+        regex {:left (re-pattern (str pattern "([\\s\\S]*?)\\z"))
+               :right (re-pattern (str "\\A([\\s\\S]*?)" pattern))}]
+    (move buffer key regex)))
