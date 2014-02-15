@@ -1,37 +1,34 @@
 (ns txtlib.core.history
+  (:refer-clojure :exclude [future])
   (:require [clojure.zip :as zip]))
 
-(defrecord Change [present future])
+(defprotocol History
+  (value [history])
+  (future [history] [history future]))
 
-(defn change [value] (Change. value nil))
+(deftype Change [value future]
+  History
+  (value [history] value)
+  (future [history] future)
+  (future [history future] (Change. value future)))
 
-(defn- make-node [change children]
-  (assoc change :future children))
+(defn change [value]
+  (Change. value nil))
 
 (defn history [value]
-  (zip/zipper :future :future make-node (change value)))
+  (zip/zipper future future future (change value)))
 
-(defn present
-  ([history]
-     (-> history zip/node :present))
-  ([history value]
-     (zip/edit history assoc :present value)))
+(defn present [history]
+  (-> history zip/node value))
 
 (defn undo [history]
-  (if-let [history (zip/up history)]
-    history
-    history))
+  (or (zip/up history) history))
 
 (defn redo [history]
-  (if-let [history (zip/down history)]
-    history
-    history))
+  (or (zip/down history) history))
 
 (defn commit [history value]
   (-> history
-      (zip/edit assoc :future [])
+      (zip/edit future [])
       (zip/insert-child (change value))
       zip/down))
-
-(defn edit [history f & args]
-  (apply zip/edit history update-in [:present] f args))

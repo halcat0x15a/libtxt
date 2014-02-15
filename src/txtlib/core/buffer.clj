@@ -33,7 +33,7 @@
 
 (def empty (buffer ""))
 
-(defn show [{:keys [left right]}]
+(defn text [{:keys [left right]}]
   (str left right))
 
 (defn cursor [{:keys [left]}]
@@ -118,7 +118,7 @@
 
 (defn copy [buffer]
   (if-let [selection (selection buffer)]
-    (apply subs (show buffer) selection)))
+    (apply subs (text buffer) selection)))
 
 (defn cut [{:keys [mark] :as buffer}]
   (if mark

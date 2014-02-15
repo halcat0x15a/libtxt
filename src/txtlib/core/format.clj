@@ -6,7 +6,9 @@
 
 (defrecord Color [foreground background])
 
-(defrecord Style [color cursor selection fontsize x y width height])
+(defrecord Rectangle [x y width height])
+
+(defrecord Style [color cursor selection fontsize])
 
 (def special
   {\< "&lt;"
@@ -26,15 +28,15 @@
        (take height)
        (string/join \newline)))
 
-(defn html
-  ([node {:keys [color fontsize] :as style}]
-     (str (format "<pre style=\"font-size:%spx;\">" fontsize)
-          (view (html node style color) style)
-          "</pre>"))
-  ([{:keys [name value] :as node} style color]
-     (cond (vector? node) (->> node (map #(html % style color)) string/join)
-           (string? node) (span node color)
-           (and name value) (html value style (get style name color)))))
+(defn render [{:keys [name value] :as node} renderer rule color]
+  (cond (vector? node) (->> node (map #(render % renderer rule color)) string/join)
+        (string? node) (renderer node color)
+        (and name value) (render value renderer rule (get rule name color))))
+
+(defn html [node {:keys [color fontsize] :as style} bounds]
+  (str (format "<pre style=\"font-size:%spx;\">" fontsize)
+       (view (render node span style color) bounds)
+       "</pre>"))
 
 (def normal "\\e[0m")
 
