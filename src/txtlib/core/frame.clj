@@ -11,7 +11,7 @@
   ([{:keys [key map] :as frame} value]
      (assoc-in frame [:map key] value)))
 
-(defn open [frame name value]
+(defn add [frame name value]
   (-> frame
       (assoc-in [:map name] value)
       (assoc :key name)))

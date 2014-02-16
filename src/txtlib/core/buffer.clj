@@ -97,8 +97,13 @@
          touch
          (update-in [key] string-delete key n))))
 
+(defn regex-find [buffer key regex]
+  (second (re-find (key regex) (key buffer))))
+
 (defn delete-matches [buffer key regex]
-  (delete buffer key (count (re-find (key regex) (key buffer)))))
+  (if-let [result (regex-find buffer key regex)]
+    (delete buffer key (count result))
+    buffer))
 
 (defn overwrite [buffer key value]
   (-> buffer
@@ -106,7 +111,7 @@
       (insert (complement key) value)))
 
 (defn move [buffer key regex]
-  (if-let [[_ result] (re-find (key regex) (key buffer))]
+  (if-let [result (regex-find buffer key regex)]
     (-> buffer
         (overwrite key result)
         (keep buffer))

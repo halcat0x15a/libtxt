@@ -4,9 +4,7 @@
             [txtlib.core.history :as history]
             [txtlib.core.format :as format]
             [txtlib.core.editor :as editor]
-            [txtlib.core.keymap :as keymap]
-            [txtlib.core.application :as app]
-            [txtlib.core.application.notepad :as notepad])
+            [txtlib.core.editor.notepad :as notepad])
   (:gen-class :extends javafx.application.Application)
   (:import [javafx.application Application]
            [javafx.beans.value ChangeListener]
@@ -27,7 +25,7 @@
 
 (defn input [^KeyEvent event]
   (let [code (.getCode event)]
-    (keymap/input
+    (editor/input
      (first (.getText event))
      (get special code (keyword (.getName code)))
      (.isShiftDown event)
@@ -35,44 +33,44 @@
      (.isAltDown event)
      (.isMetaDown event))))
 
-(defn open [app stage]
+(defn open [editor stage]
   (if-let [file (.showOpenDialog (FileChooser.) stage)]
-    (app/open app (.getPath file) (slurp file))
-    app))
+    (editor/open editor (.getPath file) (slurp file))
+    editor))
 
-(defn write [app file]
-  (spit file (-> app app/current editor/text))
-  (-> app lens/update app/current editor/save))
+(defn write [editor file]
+  (spit file (editor/text editor))
+  (editor/save editor))
 
-(defn save-as [app stage]
+(defn save-as [editor stage]
   (if-let [file (.showSaveDialog (FileChooser.) stage)]
-    (write app file)
-    app))
+    (write editor file)
+    editor))
 
-(defn save [app stage]
-  (if (-> app app/current editor/changed?)
-    (write app (app/path app))
-    app))
+(defn save [editor stage]
+  (if (editor/changed? editor)
+    (write editor (editor/path editor))
+    editor))
 
 (defn keymap [stage]
   {#{:O :ctrl} #(open % stage)
    #{:S :ctrl} #(save % stage)})
 
 (defn -start [this ^Stage stage]
-  (let [editor (atom (update-in notepad/notepad [:keymap] merge app/keymap (keymap stage)))
+  (let [editor (atom (assoc notepad/notepad :keymap (keymap stage)))
         view (doto (WebView.)
                (.setContextMenuEnabled false))
         key-press (reify EventHandler
                     (handle [this event]
-                      (swap! editor keymap/run (input event))
-                      (-> view .getEngine (.loadContent (app/render @editor format/html)))))
+                      (swap! editor editor/run (input event))
+                      (-> view .getEngine (.loadContent (format/pre (editor/render @editor format/span) (:style @editor))))))
         scene (doto (Scene. view)
                 (.setOnKeyPressed key-press))]
     (.. view
         heightProperty
         (addListener (reify ChangeListener
                        (changed [this observable old new]
-                         (swap! editor (lens/compose (lens/lens :height) editor/bounds app/current) (int (/ new 16)))))))
+                         (swap! editor (lens/compose (lens/lens :height) editor/bounds) (int (/ new 16)))))))
     (doto stage
       (.setTitle "txtlib")
       (.setScene scene)
