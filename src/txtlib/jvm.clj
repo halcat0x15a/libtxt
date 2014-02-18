@@ -17,6 +17,7 @@
 (def special
   {KeyCode/BACK_SPACE :backspace
    KeyCode/ENTER :enter
+   KeyCode/TAB :tab
    KeyCode/LEFT :left
    KeyCode/RIGHT :right
    KeyCode/UP :up
@@ -25,7 +26,7 @@
 
 (defn input [^KeyEvent event]
   (let [code (.getCode event)]
-    (editor/input
+    (editor/event
      (first (.getText event))
      (get special code (keyword (.getName code)))
      (.isShiftDown event)
@@ -40,7 +41,7 @@
 
 (defn write [editor file]
   (spit file (editor/text editor))
-  (editor/save editor))
+  editor)
 
 (defn save-as [editor stage]
   (if-let [file (.showSaveDialog (FileChooser.) stage)]
@@ -70,7 +71,8 @@
         heightProperty
         (addListener (reify ChangeListener
                        (changed [this observable old new]
-                         (swap! editor assoc :height (int (/ new 16)))))))
+                         (swap! editor assoc :height (int (/ new 16)))
+                         (swap! editor editor/resize)))))
     (doto stage
       (.setTitle "txtlib")
       (.setScene scene)

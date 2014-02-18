@@ -24,10 +24,10 @@
 
 (def keymap
   {#{:enter} execute
-   :run (fn [editor {:keys [char]}]
-          (if char
-            (editor/insert editor :left char)
-            editor))})
+   #{:backspace} editor/backspace
+   #{:left} #(editor/move % :left buffer/character)
+   #{:right} #(editor/move % :right buffer/character)
+   :run editor/input})
 
 (defrecord Command [buffer history bounds target function parameters]
   editor/Buffer
@@ -35,11 +35,12 @@
   (hint [command] :absolute))
 
 (defn command [editor function & parameters]
-  (Command. buffer/empty
-            (history/history buffer/empty)
+  (Command. buffer/null
+            (history/history buffer/null)
             (format/rectangle 0 0 (:width editor) 1)
             (editor/path editor)
-            function parameters))
+            function
+            parameters))
 
 (defn search [editor]
   (editor/add editor "*search*" (command editor editor/search "query")))

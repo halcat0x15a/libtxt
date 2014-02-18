@@ -38,7 +38,7 @@
            (and name value) (render value format style (get style name color)))))
 
 (defn view [string {:keys [x y width height]}]
-  (->> (string/split string #"\n" -1)
+  (->> (concat (string/split string #"\n" -1) (repeat height ""))
        (drop y)
        (take height)
        (string/join \newline)))

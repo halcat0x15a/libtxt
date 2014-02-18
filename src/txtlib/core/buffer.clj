@@ -1,37 +1,31 @@
 (ns txtlib.core.buffer
-  (:refer-clojure :exclude [char chars keep empty complement])
   (:require [clojure.string :as string]))
 
-(def complement
-  {:left :right
-   :right :left})
+(defn- field [left right]
+  {:left left
+   :right right})
 
-(def char
-  {:left #"([\s\S])\z"
-   :right #"\A([\s\S])"})
+(def opposite (field :right :left))
 
-(def word
-  {:left #"(\w+\W*)\z"
-   :right #"\A(\W*\w+)"})
+(def character (field #"([\s\S])\z" #"\A([\s\S])"))
 
-(def chars
-  {:left #"([^\n\r]*)\z"
-   :right #"\A([^\n\r]*)"})
+(def word (field #"(\w+\W*)\z" #"\A(\W*\w+)"))
 
-(def line
-  {:left #"([\n\r][^\n\r]*)\z"
-   :right #"\A([^\n\r]*[\n\r])"})
+(def characters (field #"(.*)\z" #"\A(.*)"))
 
-(def all
-  {:left #"([\s\S]*)\z"
-   :right #"\A([\s\S]*)"})
+(def line (field #"([\n\r].*)\z" #"\A(.*[\n\r])"))
+
+(def all (field #"([\s\S]*)\z" #"\A([\s\S]*)"))
 
 (defrecord Buffer [left right mark])
 
-(defn buffer [string]
-  (->Buffer "" string nil))
+(defn buffer
+  ([string]
+     (buffer "" string))
+  ([left right]
+     (Buffer. left right nil)))
 
-(def empty (buffer ""))
+(def null (buffer ""))
 
 (defn text [{:keys [left right]}]
   (str left right))
@@ -40,7 +34,7 @@
   (count left))
 
 (defn position [{:keys [left]}]
-  [(count (re-find #"[^\n]*\z" left))
+  [(count (second (re-find (:left characters) left)))
    (dec (count (string/split left #"\n" -1)))])
 
 (defn mark [buffer]
@@ -54,24 +48,6 @@
 (defn deactivate [buffer]
   (assoc buffer :mark nil))
 
-(defn changed? [buffer]
-  (-> buffer
-      meta
-      ::changed?))
-
-(defn touch [buffer]
-  (-> buffer
-      (vary-meta assoc ::changed? true)
-      deactivate))
-
-(defn save [buffer]
-  (vary-meta buffer dissoc ::changed?))
-
-(defn keep [buffer previous]
-  (-> buffer
-      (assoc :mark (:mark previous))
-      (with-meta (meta previous))))
-
 (defn- string-insert [string key value]
   (case key
     :left (str string value)
@@ -79,7 +55,7 @@
 
 (defn insert [buffer key value]
   (-> buffer
-      touch
+      deactivate
       (update-in [key] string-insert key value)))
 
 (defn- string-delete [string key n]
@@ -94,7 +70,7 @@
        (delete buffer :left (- n))))
   ([buffer key n]
      (-> buffer
-         touch
+         deactivate
          (update-in [key] string-delete key n))))
 
 (defn regex-find [buffer key regex]
@@ -108,13 +84,13 @@
 (defn overwrite [buffer key value]
   (-> buffer
       (delete key (count value))
-      (insert (complement key) value)))
+      (insert (opposite key) value)))
 
-(defn move [buffer key regex]
+(defn move [{:keys [mark] :as buffer} key regex]
   (if-let [result (regex-find buffer key regex)]
     (-> buffer
         (overwrite key result)
-        (keep buffer))
+        (assoc :mark mark))
     buffer))
 
 (defn selection [{:keys [mark] :as buffer}]

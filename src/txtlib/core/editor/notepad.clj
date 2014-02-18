@@ -17,18 +17,17 @@
   {#{:enter} (comp editor/newline editor/commit)
    #{:backspace} editor/backspace
    #{:Z :ctrl} editor/undo
-   :run (fn [editor {:keys [char]}]
-          (if char
-            (editor/insert editor :left char)
-            editor))})
+   #{:W :ctrl} editor/close
+   #{:tab :ctrl} editor/switch
+   :run editor/input})
 
 (def keymap
-  (->> {#{:left} (comp #(editor/move % :left buffer/char) editor/deactivate)
-        #{:right} (comp #(editor/move % :right buffer/char) editor/deactivate)
+  (->> {#{:left} (comp #(editor/move % :left buffer/character) editor/deactivate)
+        #{:right} (comp #(editor/move % :right buffer/character) editor/deactivate)
         #{:up} (comp #(editor/move % :left buffer/line) editor/deactivate)
         #{:down} (comp #(editor/move % :right buffer/line) editor/deactivate)
-        #{:left :shift} (comp #(editor/move % :left buffer/char) editor/activate)
-        #{:right :shift} (comp #(editor/move % :right buffer/char) editor/activate)
+        #{:left :shift} (comp #(editor/move % :left buffer/character) editor/activate)
+        #{:right :shift} (comp #(editor/move % :right buffer/character) editor/activate)
         #{:up :shift} (comp #(editor/move % :left buffer/line) editor/activate)
         #{:down :shift} (comp #(editor/move % :right buffer/line) editor/activate)
         #{:A :ctrl} editor/select-all
@@ -47,16 +46,16 @@
 (defrecord Notepad [buffers clipboard style keymap width height]
   editor/Editor
   (read [editor string]
-    (Buffer. (buffer/buffer string) (history/history buffer/empty) (editor/bounds editor)))
+    (Buffer. (buffer/buffer string) (history/history buffer/null) (editor/bounds editor)))
   (render [editor format]
     (-> buffers
-        (map/map-vals (fn [{:keys [buffer bounds]}]
-                        (-> buffer format/buffer (format/render format style) (format/view bounds))))
-        (map/reduce-vals #(str %1 \newline %2)))))
+        (map/map-values (fn [{:keys [buffer bounds]}]
+                          (-> buffer format/buffer (format/render format style) (format/view bounds))))
+        (map/reduce-values #(str %1 \newline %2)))))
 
 (def notepad
   (Notepad.
-   (map/create "*scratch*" (Buffer. buffer/empty (history/history buffer/empty) (format/rectangle)))
+   (map/create "*scratch*" (Buffer. buffer/null (history/history buffer/null) (format/rectangle)))
    (history/history "")
    style
    {}

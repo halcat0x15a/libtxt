@@ -1,5 +1,4 @@
 (ns txtlib.test.buffer
-  (:refer-clojure :exclude [key])
   (:require [clojure.test :refer :all]
             [clojure.test.generative :refer :all]
             [clojure.data.generators :as gen]
@@ -8,25 +7,25 @@
 (defn buffer []
   (buffer/->Buffer (gen/string) (gen/string) nil))
 
-(defn key []
+(defn field []
   (gen/rand-nth [:left :right]))
 
 (defn regex []
-  (gen/rand-nth [buffer/char buffer/line buffer/word]))
+  (gen/rand-nth [buffer/character buffer/line buffer/word buffer/characters buffer/all]))
 
-(defspec double-complement
-  (comp buffer/complement buffer/complement)
-  [^{:tag `key} key]
-  (assert (= % key)))
+(defspec double-opposite
+  (comp buffer/opposite buffer/opposite)
+  [^{:tag `field} field]
+  (assert (= % field)))
 
 (defspec preserving-move
   buffer/move
-  [^{:tag `buffer} buffer ^{:tag `key} key ^{:tag `regex} regex]
+  [^{:tag `buffer} buffer ^{:tag `field} field ^{:tag `regex} regex]
   (assert (= (buffer/text %) (buffer/text buffer))))
 
 (defspec copy-and-paste
-  (fn [buffer key regex]
-    (let [buffer (-> buffer buffer/mark (buffer/move key regex))]
-      (-> buffer buffer/cut (buffer/insert key (buffer/copy buffer)))))
-  [^{:tag `buffer} buffer ^{:tag `key} key ^{:tag `regex} regex]
+  (fn [buffer field regex]
+    (let [buffer (-> buffer buffer/mark (buffer/move field regex))]
+      (-> buffer buffer/cut (buffer/insert field (buffer/copy buffer)))))
+  [^{:tag `buffer} buffer ^{:tag `field} field ^{:tag `regex} regex]
   (assert (= (buffer/text %) (buffer/text buffer))))

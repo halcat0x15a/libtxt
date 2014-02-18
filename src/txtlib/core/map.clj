@@ -1,5 +1,4 @@
 (ns txtlib.core.map
-  (:refer-clojure :exclude [vals remove])
   (:require [clojure.walk :as walk]))
 
 (defrecord Map [key val keyvals])
@@ -13,35 +12,38 @@
     :val val'
     :keyvals (if (= key key') keyvals (-> keyvals (dissoc key') (assoc key val)))))
 
-(defn remove [{:keys [key keyvals] :as map} key']
+(defn delete [{:keys [key keyvals] :as map} key']
   (if (= key key')
     (let [[key val] (first keyvals)]
       (assoc map
         :key key
         :val val
-        :keyvals (apply hash-map (next keyvals))))
+        :keyvals (into {} (next keyvals))))
     (assoc map
       :keyvals (dissoc keyvals key'))))
 
 (defn switch [{:keys [keyvals] :as map} key]
   (if-let [val (get keyvals key)]
     (-> map
-        (remove key)
+        (delete key)
         (add key val))
     map))
 
 (defn size [{:keys [keyvals]}]
   (inc (count keyvals)))
 
-(defn vals [{:keys [val keyvals]}]
+(defn values [{:keys [val keyvals]}]
   (cons val (map second keyvals)))
 
-(defn map-vals [{:keys [val keyvals] :as map} f & args]
+(defn map-values [{:keys [val keyvals] :as map} f & args]
   (assoc map
     :val (apply f val args)
     :keyvals (walk/walk (fn [[k v]] [k (apply f v args)]) identity keyvals)))
 
-(defn reduce-vals [{:keys [val keyvals]} f]
+(defn reduce-values [{:keys [val keyvals]} f]
   (->> keyvals
        (map second)
        (reduce f val)))
+
+(defn next-key [{:keys [keyvals]}]
+  (some-> keyvals last key))

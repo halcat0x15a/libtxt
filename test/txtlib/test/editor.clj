@@ -11,12 +11,12 @@
 (defn modifier []
   (gen/rand-nth [:shift :ctrl :alt :meta]))
 
-(defn input []
-  (editor/->Input (gen/char) (gen/keyword) (gen/set modifier)))
+(defn event []
+  (editor/event (gen/char) (gen/keyword) (gen/set modifier)))
 
 (defspec run
   editor/run
-  [^{:tag `editor} editor ^{:tag `input} input]
+  [^{:tag `editor} editor ^{:tag `event} event]
   (assert (and (editor/buffer %)
                (editor/history %)
                (editor/bounds %)
