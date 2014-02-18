@@ -2,7 +2,7 @@
   (:require [clojure.walk :as walk]
             [txtlib.core.buffer :as buffer]
             [txtlib.core.history :as history]
-            [txtlib.core.frame :as frame]
+            [txtlib.core.map :as map]
             [txtlib.core.editor :as editor]
             [txtlib.core.editor.command :as command]
             [txtlib.core.format :as format]))
@@ -41,22 +41,24 @@
 
 (defrecord Buffer [buffer history bounds]
   editor/Buffer
-  (keymap [editor] keymap))
+  (keymap [editor] keymap)
+  (hint [editor] :horizontal))
 
-(defrecord Notepad [frame clipboard style keymap]
+(defrecord Notepad [buffers clipboard style keymap width height]
   editor/Editor
   (read [editor string]
     (Buffer. (buffer/buffer string) (history/history buffer/empty) (editor/bounds editor)))
   (render [editor format]
-    (-> editor
-        editor/buffer
-        format/buffer
-        (format/render format style)
-        (format/view (editor/bounds editor)))))
+    (-> buffers
+        (map/map-vals (fn [{:keys [buffer bounds]}]
+                        (-> buffer format/buffer (format/render format style) (format/view bounds))))
+        (map/reduce-vals #(str %1 \newline %2)))))
 
 (def notepad
   (Notepad.
-   (frame/frame "*scratch*" (Buffer. buffer/empty (history/history buffer/empty) (format/rectangle)))
+   (map/create "*scratch*" (Buffer. buffer/empty (history/history buffer/empty) (format/rectangle)))
    (history/history "")
    style
-   {}))
+   {}
+   0
+   0))

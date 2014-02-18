@@ -70,7 +70,7 @@
         heightProperty
         (addListener (reify ChangeListener
                        (changed [this observable old new]
-                         (swap! editor (lens/compose (lens/lens :height) editor/bounds) (int (/ new 16)))))))
+                         (swap! editor assoc :height (int (/ new 16)))))))
     (doto stage
       (.setTitle "txtlib")
       (.setScene scene)

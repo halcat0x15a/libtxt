@@ -3,19 +3,32 @@
   (:require [txtlib.core.lens :refer :all]
             [txtlib.core.buffer :as buffer]
             [txtlib.core.history :as history]
-            [txtlib.core.frame :as frame]
+            [txtlib.core.map :as map]
             [txtlib.core.format :as format]))
 
+(defrecord Input [char key modifiers])
+
+(defn input
+  ([char key modifiers]
+     (Input. char key modifiers))
+  ([char key shift? ctrl? alt? meta?]
+     (->> {:shift shift? :ctrl ctrl? :alt alt? :meta meta?}
+          (filter second)
+          (map first)
+          set
+          (Input. char key))))
+
 (defprotocol Buffer
-  (keymap [window]))
+  (keymap [buffer])
+  (hint [buffer]))
 
 (defprotocol Editor
   (read [editor string])
   (render [editor format]))
 
-(def frame (lens :frame))
+(def buffers (lens :buffers))
 
-(def current (compose frame/current frame))
+(def current (compose (lens :val) buffers))
 
 (def buffer (compose (lens :buffer) current))
 
@@ -26,7 +39,7 @@
 (def clipboard (lens :clipboard))
 
 (defn path [editor]
-  (-> editor frame :key))
+  (-> editor buffers :key))
 
 (defn text [editor]
   (-> editor buffer buffer/text))
@@ -93,32 +106,34 @@
     (update editor history history/commit (buffer editor))
     editor))
 
-(defn add [editor key window]
-  (update editor frame frame/add key window))
+(defn add [{:keys [height] :as editor} key {:keys [bounds] :as window}]
+  (update editor buffers map/add key window))
 
 (defn open [editor key string]
   (add editor key (read editor string)))
 
 (defn switch [editor key]
-  (update editor frame frame/switch key))
+  (update editor buffers map/switch key))
 
 (defn compute [editor]
   (update editor bounds format/compute (buffer editor)))
 
-(defrecord Input [char key modifiers])
+(defn width [{:keys [buffers width] :as editor}]
+  width)
 
-(defn input
-  ([char key modifiers]
-     (Input. char key modifiers))
-  ([char key shift? ctrl? alt? meta?]
-     (->> {:shift shift? :ctrl ctrl? :alt alt? :meta meta?}
-          (filter second)
-          (map first)
-          set
-          (Input. char key))))
+(defn height [{:keys [buffers height] :as editor}]
+  (doto (/ (- height (->> buffers map/vals (filter #(= (hint %) :absolute)) (map (comp :height :bounds)) (apply +)))
+     (->> buffers map/vals (filter #(= (hint %) :horizontal)) count)) prn))
+
+(defn resize [editor]
+  (update editor buffers map/map-vals
+          (fn [buffer]
+            (if (= (hint buffer) :horizontal)
+              (assoc-in buffer [:bounds :height] (height editor))
+              buffer))))
 
 (defn run [editor {:keys [char key modifiers] :as input}]
   (let [{:keys [run] :as keymap} (merge (:keymap editor) (-> editor current keymap))]
     (if-let [run (or (get keymap (conj modifiers key)) (get keymap char))]
-      (-> editor run compute)
-      (-> editor (run input) compute))))
+      (-> editor resize run compute)
+      (-> editor resize (run input) compute))))
