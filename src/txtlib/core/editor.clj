@@ -1,6 +1,6 @@
 (ns txtlib.core.editor
   (:refer-clojure :exclude [read newline])
-  (:require [txtlib.core.lens :refer :all]
+  (:require [txtlib.core.lens :refer [update lens compose]]
             [txtlib.core.buffer :as buffer]
             [txtlib.core.history :as history]
             [txtlib.core.map :as map]
@@ -82,7 +82,7 @@
       (update buffer buffer/cut)))
 
 (defn paste [editor]
-  (update editor buffer buffer/insert (-> editor clipboard history/present)))
+  (update editor buffer buffer/insert :left (-> editor clipboard history/present)))
 
 (defn select-all [editor]
   (-> editor
@@ -114,7 +114,6 @@
 
 (defn switch
   ([editor key]
-     (prn key)
      (update editor buffers map/switch key))
   ([editor]
      (switch editor (map/next-key (buffers editor)))))

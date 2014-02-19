@@ -7,15 +7,15 @@
 
 (def opposite (field :right :left))
 
-(def character (field #"([\s\S])\z" #"\A([\s\S])"))
+(def character (field #"([\s\S])$" #"^([\s\S])"))
 
-(def word (field #"(\w+\W*)\z" #"\A(\W*\w+)"))
+(def word (field #"(\w+\W*)$" #"^(\W*\w+)"))
 
-(def characters (field #"(.*)\z" #"\A(.*)"))
+(def characters (field #"(.*)$" #"^(.*)"))
 
-(def line (field #"([\n\r].*)\z" #"\A(.*[\n\r])"))
+(def line (field #"([\n\r].*)$" #"^(.*[\n\r])"))
 
-(def all (field #"([\s\S]*)\z" #"\A([\s\S]*)"))
+(def all (field #"([\s\S]*)$" #"^([\s\S]*)"))
 
 (defrecord Buffer [left right mark])
 
@@ -108,6 +108,6 @@
 
 (defn search [buffer key pattern]
   (let [pattern (string/re-quote-replacement pattern)
-        regex {:left (re-pattern (str pattern "([\\s\\S]*?)\\z"))
-               :right (re-pattern (str "\\A([\\s\\S]*?)" pattern))}]
+        regex {:left (re-pattern (str pattern "([\\s\\S]*?)$"))
+               :right (re-pattern (str "^([\\s\\S]*?)" pattern))}]
     (move buffer key regex)))

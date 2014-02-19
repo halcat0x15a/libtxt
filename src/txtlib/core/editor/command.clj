@@ -1,5 +1,5 @@
 (ns txtlib.core.editor.command
-  (:require [txtlib.core.lens :refer :all]
+  (:require [txtlib.core.lens :refer [lens update compose]]
             [txtlib.core.buffer :as buffer]
             [txtlib.core.history :as history]
             [txtlib.core.format :as format]

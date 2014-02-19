@@ -21,13 +21,20 @@
    \newline (str \space \newline)})
 
 (defn span [string {:keys [foreground background]}]
-  (format "<span style=\"color:%s;background-color:%s;\">%s</span>"
-          foreground
-          background
-          (string/escape string special)))
+  (str "<span style=\"color:"
+       foreground
+       ";background-color:"
+       background
+       ";\">"
+       (string/escape string special)
+       "</span>"))
 
 (defn pre [string {:keys [fontsize]}]
-  (format "<pre style=\"font-size:%spx;\">%s</pre>" fontsize string))
+  (str "<pre style=\"font-size:"
+       fontsize
+       "px;\">"
+       string
+       "</pre>"))
 
 (defn render
   ([node format {:keys [color] :as style}]
