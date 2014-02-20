@@ -19,30 +19,25 @@
    KeyCodes.DOWN :down
    KeyCodes.ESC :esc})
 
-(defn main [element]
+(defn main []
   (let [editor (atom notepad/notepad)
-        element (atom element)
         vsm (ViewportSizeMonitor.)
+        update! (fn [f & args]
+                  (apply swap! editor f args)
+                  (dom/replaceNode (dom/htmlToDocumentFragment (format/pre (editor/render @editor format/span) (:style @editor)))
+                                   (dom/getElement "txtlib")))
         resize (fn [event]
                  (let [size (.getSize vsm)]
-                   (swap! editor assoc :height (int (/ (.-height size) 16)))))]
-    (.addEventListener vsm EventType.RESIZE resize)
+                   (update! editor assoc :height (int (/ (.-height size) 16)))))
+        key (fn [event]
+              (let [char (if (pos? (.-charCode event))
+                           (.fromCharCode js/String (.-charCode event)))
+                    key (get special
+                             (.-keyCode event)
+                             (keyword (string/upper-case (object/findKey KeyCodes (partial identical? (.-keyCode event))))))]
+                (.preventDefault event)
+                (update! editor editor/run (editor/event char key (.-shiftKey event) (.-ctrlKey event) (.-altKey event) (.-metaKey event)))))]
     (resize nil)
+    (.addEventListener vsm EventType.RESIZE resize)
     (doto (KeyHandler. (dom/getDocument) true)
-      (.addEventListener KeyHandler.EventType.KEY
-                         (fn [event]
-                           (.preventDefault event)
-                           (swap! editor
-                                  editor/run
-                                  (editor/event (if (pos? (.-charCode event))
-                                                  (.fromCharCode js/String (.-charCode event)))
-                                                (get special
-                                                     (.-keyCode event)
-                                                     (keyword (string/upper-case (object/findKey KeyCodes (partial identical? (.-keyCode event))))))
-                                                (.-shiftKey event)
-                                                (.-ctrlKey event)
-                                                (.-altKey event)
-                                                (.-metaKey event)))
-                           (let [old @element]
-                             (reset! element (dom/htmlToDocumentFragment (format/pre (editor/render @editor format/span) (:style @editor))))
-                             (dom/replaceNode @element old)))))))
+      (.addEventListener KeyHandler.EventType.KEY key))))

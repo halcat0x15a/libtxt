@@ -30,7 +30,7 @@
        "</span>"))
 
 (defn pre [string {:keys [fontsize]}]
-  (str "<pre style=\"font-size:"
+  (str "<pre id=\"txtlib\" style=\"font-size:"
        fontsize
        "px;\">"
        string
