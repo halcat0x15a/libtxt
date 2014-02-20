@@ -1,5 +1,9 @@
 (ns leiningen.txtlib
   (:require [clojure.java.io :as io]
+            [leiningen.core.eval :as eval]
+            [leiningen.run :as run]
+            [leiningen.test :as test]
+            [leiningen.compile :as compile]
             [leiningen.cljsbuild :as cljsbuild])
   (:import [java.nio.file Path Paths Files CopyOption StandardCopyOption LinkOption DirectoryStream$Filter]
            [java.nio.file.attribute FileAttribute]))
@@ -35,4 +39,12 @@
 
 (defn txtlib [project task]
   (case task
+    "run" (do
+            (compile/compile project "txtlib.jvm")
+            (run/run project))
+    "test" (do
+             (eval/eval-in-project project
+                                   `(clojure.test.generative.runner/-main "test")
+                                   '(require 'clojure.test.generative.runner))
+             (test/test project))
     "compile" (cljsbuild project)))

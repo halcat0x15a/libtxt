@@ -9,5 +9,4 @@
   :plugins [[lein-cljsbuild "1.0.2"]]
   :cljsbuild {:builds {:main {:source-paths ["src-cljs"]}}}
   :global-vars {*warn-on-reflection* true}
-  :eval-in-leiningen true
   :main txtlib.jvm)
