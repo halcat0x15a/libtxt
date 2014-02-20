@@ -1,41 +1,46 @@
 (ns txtlib.core.buffer
+  (:refer-clojure :exclude [empty])
   (:require [clojure.string :as string]))
 
-(defn- field [left right]
-  {:left left
-   :right right})
+(defn- pair [left right]
+  #(case %
+     :left left
+     :right right))
 
-(def opposite (field :right :left))
+(def opposite (pair :right :left))
 
-(def character (field #"([\s\S])$" #"^([\s\S])"))
+(def character (pair #"([\s\S])$" #"^([\s\S])"))
 
-(def word (field #"(\w+\W*)$" #"^(\W*\w+)"))
+(def word (pair #"(\w+\W*)$" #"^(\W*\w+)"))
 
-(def characters (field #"(.*)$" #"^(.*)"))
+(def characters (pair #"(.*)$" #"^(.*)"))
 
-(def line (field #"([\n\r].*)$" #"^(.*[\n\r])"))
+(def line (pair #"([\n\r].*)$" #"^(.*[\n\r])"))
 
-(def all (field #"([\s\S]*)$" #"^([\s\S]*)"))
+(def all (pair #"([\s\S]*)$" #"^([\s\S]*)"))
 
-(defrecord Buffer [left right mark])
+(defprotocol Buffer
+  (text [buffer])
+  (cursor [buffer])
+  (position [buffer]))
+
+(defrecord Zipper [left right mark]
+  Buffer
+  (text [buffer]
+    (str left right))
+  (cursor [buffer]
+    (count left))
+  (position [buffer]
+    [(count (second (re-find (characters :left) left)))
+     (dec (count (string/split left #"\n" -1)))]))
 
 (defn buffer
   ([string]
      (buffer "" string))
   ([left right]
-     (Buffer. left right nil)))
+     (Zipper. left right nil)))
 
-(def null (buffer ""))
-
-(defn text [{:keys [left right]}]
-  (str left right))
-
-(defn cursor [{:keys [left]}]
-  (count left))
-
-(defn position [{:keys [left]}]
-  [(count (second (re-find (:left characters) left)))
-   (dec (count (string/split left #"\n" -1)))])
+(def empty (buffer ""))
 
 (defn mark [buffer]
   (assoc buffer :mark (cursor buffer)))
@@ -48,20 +53,11 @@
 (defn deactivate [buffer]
   (assoc buffer :mark nil))
 
-(defn- string-insert [string key value]
-  (case key
-    :left (str string value)
-    :right (str value string)))
-
 (defn insert [buffer key value]
-  (-> buffer
-      deactivate
-      (update-in [key] string-insert key value)))
-
-(defn- string-delete [string key n]
-  (case key
-    :left (subs string 0 (- (count string) n))
-    :right (subs string n)))
+  (let [string (key buffer)]
+    (-> buffer
+        deactivate
+        (assoc key (case key :left (str string value) :right (str value string))))))
 
 (defn delete
   ([buffer n]
@@ -69,45 +65,47 @@
        (delete buffer :right n)
        (delete buffer :left (- n))))
   ([buffer key n]
-     (-> buffer
-         deactivate
-         (update-in [key] string-delete key n))))
+     (let [string (key buffer)
+           length (count string)]
+       (if (<= 1 n length)
+         (-> buffer
+             deactivate
+             (assoc key (case key :left (subs string 0 (- length n)) :right (subs string n))))
+         buffer))))
 
-(defn regex-find [buffer key regex]
-  (second (re-find (key regex) (key buffer))))
+(defn move [buffer key n]
+  (let [string (key buffer)
+        length (count string)]
+    (if (<= 1 n length)
+      (-> buffer
+          (delete key n)
+          (insert (opposite key) (case key :left (subs string (- length n)) :right (subs string 0 n)))
+          (assoc :mark (:mark buffer)))
+      buffer)))
 
-(defn delete-matches [buffer key regex]
-  (if-let [result (regex-find buffer key regex)]
-    (delete buffer key (count result))
+(defn matches [buffer f key regex]
+  (if-let [result (second (re-find (regex key) (key buffer)))]
+    (f buffer key (count result))
     buffer))
 
-(defn overwrite [buffer key value]
-  (-> buffer
-      (delete key (count value))
-      (insert (opposite key) value)))
-
-(defn move [{:keys [mark] :as buffer} key regex]
-  (if-let [result (regex-find buffer key regex)]
-    (-> buffer
-        (overwrite key result)
-        (assoc :mark mark))
-    buffer))
-
-(defn selection [{:keys [mark] :as buffer}]
-  (if mark
+(defn selection [buffer]
+  (if-let [mark (:mark buffer)]
     (sort [(cursor buffer) mark])))
 
 (defn copy [buffer]
   (if-let [selection (selection buffer)]
     (apply subs (text buffer) selection)))
 
-(defn cut [{:keys [mark] :as buffer}]
-  (if mark
+(defn cut [buffer]
+  (if-let [mark (:mark buffer)]
     (delete buffer (- mark (cursor buffer)))
     buffer))
 
-(defn search [buffer key pattern]
-  (let [pattern (string/re-quote-replacement pattern)
-        regex {:left (re-pattern (str pattern "([\\s\\S]*?)$"))
-               :right (re-pattern (str "^([\\s\\S]*?)" pattern))}]
-    (move buffer key regex)))
+(defn search [buffer key ^String query]
+  (let [^String string (key buffer)
+        n (case key
+            :left (.lastIndexOf string query)
+            :right (.indexOf string query))]
+    (if (pos? n)
+      (move buffer key n)
+      buffer)))

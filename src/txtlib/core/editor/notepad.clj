@@ -46,7 +46,7 @@
 (defrecord Notepad [buffers clipboard style keymap width height]
   editor/Editor
   (read [editor string]
-    (Buffer. (buffer/buffer string) (history/history buffer/null) (editor/bounds editor)))
+    (Buffer. (buffer/buffer string) (history/history buffer/empty) (editor/bounds editor)))
   (render [editor format]
     (-> buffers
         (map/map-values (fn [{:keys [buffer bounds]}]
@@ -55,7 +55,7 @@
 
 (def notepad
   (Notepad.
-   (map/create "*scratch*" (Buffer. buffer/null (history/history buffer/null) (format/rectangle)))
+   (map/create "*scratch*" (Buffer. buffer/empty (history/history buffer/empty) (format/rectangle)))
    (history/history "")
    style
    {}

@@ -51,13 +51,13 @@
   (insert editor :left \newline))
 
 (defn delete [editor key regex]
-  (update editor buffer buffer/delete-matches key regex))
+  (update editor buffer buffer/matches buffer/delete key regex))
 
 (defn backspace [editor]
   (delete editor :left buffer/character))
 
 (defn move [editor key regex]
-  (update editor buffer buffer/move key regex))
+  (update editor buffer buffer/matches buffer/move key regex))
 
 (defn search [editor query]
   (update editor buffer buffer/search :right query))

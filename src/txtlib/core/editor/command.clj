@@ -35,8 +35,8 @@
   (hint [command] :absolute))
 
 (defn command [editor function & parameters]
-  (Command. buffer/null
-            (history/history buffer/null)
+  (Command. buffer/empty
+            (history/history buffer/empty)
             (format/rectangle 0 0 (:width editor) 1)
             (editor/path editor)
             function
