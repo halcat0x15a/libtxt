@@ -38,15 +38,14 @@
        (walk/walk (fn [[k f]] [k (comp f editor/commit)]) identity)
        (merge edit)))
 
-(defrecord Buffer [buffer history bounds]
+(defrecord Buffer [buffer history bounds hint]
   editor/Buffer
-  (keymap [editor] keymap)
-  (hint [editor] :horizontal))
+  (keymap [editor] keymap))
 
 (defrecord Notepad [buffers clipboard style keymap width height]
   editor/Editor
   (read [editor string]
-    (Buffer. (buffer/buffer string) (history/history buffer/empty) (editor/bounds editor)))
+    (Buffer. (buffer/buffer string) (history/history buffer/empty) (editor/bounds editor) :horizontal))
   (render [editor format]
     (-> buffers
         (map/map-values (fn [{:keys [buffer bounds]}]
@@ -55,7 +54,7 @@
 
 (def notepad
   (Notepad.
-   (map/create "*scratch*" (Buffer. buffer/empty (history/history buffer/empty) (format/rectangle)))
+   (map/create "*scratch*" (Buffer. buffer/empty (history/history buffer/empty) (format/rectangle) :horizontal))
    (history/history "")
    style
    {}

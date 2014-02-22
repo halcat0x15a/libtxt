@@ -29,15 +29,15 @@
    #{:right} #(editor/move % :right buffer/character)
    :run editor/input})
 
-(defrecord Command [buffer history bounds target function parameters]
+(defrecord Command [buffer history bounds hint target function parameters]
   editor/Buffer
-  (keymap [command] keymap)
-  (hint [command] :absolute))
+  (keymap [command] keymap))
 
 (defn command [editor function & parameters]
   (Command. buffer/empty
             (history/history buffer/empty)
             (format/rectangle 0 0 (:width editor) 1)
+            :absolute
             (editor/path editor)
             function
             parameters))

@@ -19,8 +19,7 @@
           (Event. char key))))
 
 (defprotocol Buffer
-  (keymap [buffer])
-  (hint [buffer]))
+  (keymap [buffer]))
 
 (defprotocol Editor
   (read [editor string])
@@ -35,6 +34,8 @@
 (def history (compose (lens :history) current))
 
 (def bounds (compose (lens :bounds) current))
+
+(def hint (compose (lens :hint) current))
 
 (def clipboard (lens :clipboard))
 
@@ -106,11 +107,13 @@
 (defn add [{:keys [height] :as editor} key {:keys [bounds] :as window}]
   (update editor buffers map/add key window))
 
-(defn open [editor key string]
-  (add editor key (read editor string)))
-
 (defn close [editor]
   (update editor buffers map/delete (path editor)))
+
+(defn open [editor key string]
+  (-> editor
+      (hint :hidden)
+      (add key (read editor string))))
 
 (defn switch
   ([editor key]
@@ -125,14 +128,15 @@
   width)
 
 (defn height [{:keys [buffers height] :as editor}]
-  (/ (- height (->> buffers map/values (filter #(= (hint %) :absolute)) (map (comp :height :bounds)) (apply +)))
-     (->> buffers map/values (filter #(= (hint %) :horizontal)) count)))
+  (/ (- height (->> buffers map/values (filter #(= (:hint %) :absolute)) (map (comp :height :bounds)) (apply +)))
+     (->> buffers map/values (filter #(= (:hint %) :horizontal)) count)))
 
 (defn resize [editor]
   (update editor buffers map/map-values
           (fn [buffer]
-            (if (= (hint buffer) :horizontal)
-              (assoc-in buffer [:bounds :height] (height editor))
+            (case (:hint buffer)
+              :horizontal (assoc-in buffer [:bounds :height] (height editor))
+              :hidden (assoc-in buffer [:bounds :height] 0)
               buffer))))
 
 (defn run [editor {:keys [char key modifiers] :as event}]
