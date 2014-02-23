@@ -1,21 +1,29 @@
-(ns txtlib.core.lens)
+(ns txtlib.core.lens
+  (:require [clojure.zip :as zip]))
 
 (defn lens [key]
   (fn
-    ([obj]
-       (get obj key))
-    ([obj value]
-       (assoc obj key value))))
+    ([object]
+       (get object key))
+    ([object value]
+       (assoc object key value))))
 
-(defn update [obj lens f & args]
-  (lens obj (apply f (lens obj) args)))
+(defn update [object lens f & args]
+  (lens object (apply f (lens object) args)))
 
 (defn compose
   ([f g]
      (fn
-       ([obj]
-          (f (g obj)))
-       ([obj value]
-          (g obj (f (g obj) value)))))
+       ([object]
+          (f (g object)))
+       ([object value]
+          (g object (f (g object) value)))))
   ([f g & h]
      (reduce compose (compose f g) h)))
+
+(def zipper
+  (fn
+    ([zipper]
+       (zip/node zipper))
+    ([zipper value]
+       (zip/replace zipper value))))

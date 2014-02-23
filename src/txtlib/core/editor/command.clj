@@ -27,20 +27,17 @@
    #{:backspace} editor/backspace
    #{:left} #(editor/move % :left buffer/character)
    #{:right} #(editor/move % :right buffer/character)
-   :run editor/input})
+   :default editor/input})
 
-(defrecord Command [buffer history bounds hint target function parameters]
-  editor/Buffer
-  (keymap [command] keymap))
+(defrecord Command [buffer history keymap target function parameters])
 
 (defn command [editor function & parameters]
   (Command. buffer/empty
-            (history/history buffer/empty)
-            (format/rectangle 0 0 (:width editor) 1)
-            :absolute
-            (editor/path editor)
+            (history/root buffer/empty)
+            keymap
+            (editor/id editor)
             function
             parameters))
 
 (defn search [editor]
-  (editor/add editor "*search*" (command editor editor/search "query")))
+  (editor/minibuffer editor "*search*" (command editor editor/search "query")))

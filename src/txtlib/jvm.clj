@@ -50,15 +50,13 @@
 
 (defn save [editor stage]
   (if (editor/changed? editor)
-    (write editor (editor/path editor))
+    (write editor (editor/id editor))
     editor))
 
-(defn keymap [stage]
-  {#{:O :ctrl} #(open % stage)
-   #{:S :ctrl} #(save % stage)})
-
 (defn -start [this ^Stage stage]
-  (let [editor (atom (assoc notepad/notepad :keymap (keymap stage)))
+  (let [keymap {#{:O :ctrl} #(open % stage)
+                #{:S :ctrl} #(save % stage)}
+        editor (atom (lens/update notepad/notepad editor/keymap merge keymap))
         view (doto (WebView.)
                (.setContextMenuEnabled false))
         key-press (reify EventHandler
@@ -72,7 +70,7 @@
         (addListener (reify ChangeListener
                        (changed [this observable old new]
                          (swap! editor assoc :height (int (/ new 16)))
-                         (swap! editor editor/resize)))))
+                         (swap! editor editor/compute)))))
     (doto stage
       (.setTitle "txtlib")
       (.setScene scene)

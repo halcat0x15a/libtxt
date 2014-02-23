@@ -44,12 +44,6 @@
            (string? node) (format node color)
            (and name value) (render value format style (get style name color)))))
 
-(defn view [string {:keys [x y width height]}]
-  (->> (concat (string/split string #"\n" -1) (repeat height ""))
-       (drop y)
-       (take height)
-       (string/join \newline)))
-
 (defn compute [{:keys [x y width height] :as bounds} buffer]
   (let [[a b] (buffer/position buffer)
         height (dec height)]

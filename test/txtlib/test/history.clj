@@ -1,10 +1,11 @@
 (ns txtlib.test.history
-  (:require [clojure.data.generators :as gen]
+  (:require [clojure.zip :as zip]
+            [clojure.data.generators :as gen]
             [clojure.test.generative :refer :all]
             [txtlib.core.history :as history]))
 
 (defn history []
-  (history/history (gen/anything)))
+  (history/root (gen/anything)))
 
 (defspec undo
   (fn [history value]
@@ -12,4 +13,4 @@
         (history/commit value)
         history/undo))
   [^{:tag `history} history ^anything value]
-  (assert (= (history/present %) (history/present history))))
+  (assert (= (zip/node %) (zip/node history))))

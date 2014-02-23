@@ -14,12 +14,10 @@
    :fontsize 16})
 
 (def edit
-  {#{:enter} (comp editor/newline editor/commit)
+  {#{:enter} editor/newline
    #{:backspace} editor/backspace
    #{:Z :ctrl} editor/undo
-   #{:W :ctrl} editor/close
-   #{:tab :ctrl} editor/switch
-   :run editor/input})
+   :default editor/input})
 
 (def keymap
   (->> {#{:left} (comp #(editor/move % :left buffer/character) editor/deactivate)
@@ -38,25 +36,4 @@
        (walk/walk (fn [[k f]] [k (comp f editor/commit)]) identity)
        (merge edit)))
 
-(defrecord Buffer [buffer history bounds hint]
-  editor/Buffer
-  (keymap [editor] keymap))
-
-(defrecord Notepad [buffers clipboard style keymap width height]
-  editor/Editor
-  (read [editor string]
-    (Buffer. (buffer/buffer string) (history/history buffer/empty) (editor/bounds editor) :horizontal))
-  (render [editor format]
-    (-> buffers
-        (map/map-values (fn [{:keys [buffer bounds]}]
-                          (-> buffer format/buffer (format/render format style) (format/view bounds))))
-        (map/reduce-values #(str %1 \newline %2)))))
-
-(def notepad
-  (Notepad.
-   (map/create "*scratch*" (Buffer. buffer/empty (history/history buffer/empty) (format/rectangle) :horizontal))
-   (history/history "")
-   style
-   {}
-   0
-   0))
+(def notepad (editor/editor "*scratch*" keymap style))
