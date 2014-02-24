@@ -141,16 +141,7 @@
       (update bounds assoc :height (height editor))
       (update bounds geometry/fix (-> editor buffer buffer/position))))
 
-(defprotocol Input
-  (character [input])
-  (code [input])
-  (modifiers [input]))
-
-(deftype Event [char code modifiers]
-  Input
-  (character [input] char)
-  (code [input] code)
-  (modifiers [input] modifiers))
+(defrecord Event [char code modifiers])
 
 (defn event
   ([char code modifiers]
@@ -162,17 +153,16 @@
           set
           (Event. char code))))
 
-(defn run [editor input]
+(defn run [editor {:keys [char code modifiers] :as input}]
   (let [{:keys [default] :as keymap} (keymap editor)]
-    (compute (if-let [f (get keymap (conj (modifiers input) (code input)) (get keymap (character input)))]
+    (compute (if-let [f (get keymap (conj modifiers code) (get keymap char))]
                (f editor)
                (default editor input)))))
 
-(defn input [editor input]
-  (let [char (character input)]
-    (if (and char (empty? (disj (modifiers input) :shift)))
-      (insert editor :left char)
-      editor)))
+(defn input [editor {:keys [char modifiers]}]
+  (if (and char (empty? (disj modifiers :shift)))
+    (insert editor :left char)
+    editor))
 
 (defn render [editor format]
   (let [render (fn [control bounds]

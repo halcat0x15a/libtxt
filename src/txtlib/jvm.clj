@@ -6,7 +6,7 @@
             [txtlib.core.editor :as editor]
             [txtlib.core.editor.notepad :as notepad])
   (:gen-class :extends javafx.application.Application)
-  (:import [javafx.application Application]
+  (:import [javafx.application Application Platform]
            [javafx.beans.value ChangeListener]
            [javafx.event EventHandler]
            [javafx.stage Stage FileChooser]
@@ -53,9 +53,13 @@
     (write editor (editor/id editor))
     editor))
 
+(defn quit [editor]
+  (Platform/exit))
+
 (defn -start [this ^Stage stage]
   (let [keymap {#{:O :ctrl} #(open % stage)
-                #{:S :ctrl} #(save % stage)}
+                #{:S :ctrl} #(save % stage)
+                #{:Q :ctrl} quit}
         editor (atom (lens/update notepad/notepad editor/keymap merge keymap))
         view (doto (WebView.)
                (.setContextMenuEnabled false))
