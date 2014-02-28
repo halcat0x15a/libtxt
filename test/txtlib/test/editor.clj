@@ -19,5 +19,9 @@
   [^{:tag `editor} editor ^{:tag `event} event]
   (assert (and (editor/buffer %)
                (editor/history %)
+               (editor/id %)
                (editor/bounds %)
-               (editor/clipboard %))))
+               (editor/keymap %)
+               (editor/clipboard %)
+               (editor/width %)
+               (editor/height %))))

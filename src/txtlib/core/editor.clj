@@ -166,7 +166,13 @@
 
 (defn render [editor format]
   (let [render (fn [control bounds]
-                 (geometry/view bounds (-> control :buffer format/buffer (format/render format (:style editor)))))
+                 (let [{:keys [color fontsize] :as style} (:style editor)]
+                   (format (geometry/view bounds
+                                          (-> control
+                                              :buffer
+                                              format/buffer
+                                              (format/render format style color)))
+                           fontsize)))
         frame (frame editor)]
     (->> frame
          zip/root

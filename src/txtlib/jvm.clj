@@ -4,7 +4,8 @@
             [txtlib.core.history :as history]
             [txtlib.core.format :as format]
             [txtlib.core.editor :as editor]
-            [txtlib.core.editor.notepad :as notepad])
+            [txtlib.core.editor.notepad :as notepad]
+            [txtlib.core.editor.vi :as vi])
   (:gen-class :extends javafx.application.Application)
   (:import [javafx.application Application Platform]
            [javafx.beans.value ChangeListener]
@@ -22,7 +23,7 @@
    KeyCode/RIGHT :right
    KeyCode/UP :up
    KeyCode/DOWN :down
-   KeyCode/ESCAPE :esc})
+   KeyCode/ESCAPE :escape})
 
 (defn input [^KeyEvent event]
   (let [code (.getCode event)]
@@ -54,19 +55,20 @@
     editor))
 
 (defn quit [editor]
-  (Platform/exit))
+  (Platform/exit)
+  editor)
 
 (defn -start [this ^Stage stage]
   (let [keymap {#{:O :ctrl} #(open % stage)
                 #{:S :ctrl} #(save % stage)
                 #{:Q :ctrl} quit}
-        editor (atom (lens/update notepad/notepad editor/keymap merge keymap))
+        editor (atom (lens/update vi/vi editor/keymap merge keymap))
         view (doto (WebView.)
                (.setContextMenuEnabled false))
         key-press (reify EventHandler
                     (handle [this event]
                       (swap! editor editor/run (input event))
-                      (-> view .getEngine (.loadContent (format/pre (editor/render @editor format/span) (:style @editor))))))
+                      (-> view .getEngine (.loadContent (editor/render @editor format/html)))))
         scene (doto (Scene. view)
                 (.setOnKeyPressed key-press))]
     (.. view

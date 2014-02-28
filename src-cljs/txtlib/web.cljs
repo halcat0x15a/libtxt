@@ -19,24 +19,36 @@
    KeyCodes.DOWN :down
    KeyCodes.ESC :esc})
 
+(defn render [editor]
+  (dom/replaceNode (dom/htmlToDocumentFragment (editor/render editor format/html))
+                   (dom/getElement "txtlib")))
+
+(defn char-code [code]
+  (if (pos? code)
+    (.fromCharCode js/String code)))
+
+(defn key-code [code]
+  (-> (object/findKey KeyCodes (partial identical? code))
+      string/upper-case
+      keyword))
+
 (defn main []
   (let [editor (atom notepad/notepad)
         vsm (ViewportSizeMonitor.)
-        update! (fn [f & args]
-                  (apply swap! editor f args)
-                  (dom/replaceNode (dom/htmlToDocumentFragment (format/pre (editor/render @editor format/span) (:style @editor)))
-                                   (dom/getElement "txtlib")))
         resize (fn [event]
                  (let [size (.getSize vsm)]
-                   (update! editor assoc :height (int (/ (.-height size) 16)))))
+                   (swap! editor assoc :height (int (/ (.-height size) 16)))
+                   (render @editor)))
         key (fn [event]
-              (let [char (if (pos? (.-charCode event))
-                           (.fromCharCode js/String (.-charCode event)))
-                    key (get special
-                             (.-keyCode event)
-                             (keyword (string/upper-case (object/findKey KeyCodes (partial identical? (.-keyCode event))))))]
+              (let [char (char-code (.-charCode event))
+                    key (get special (.-keyCode event) (key-code (.-keyCode event)))
+                    input (editor/event char key
+                                        (.-shiftKey event)
+                                        (.-ctrlKey event)
+                                        (.-altKey event)
+                                        (.-metaKey event))]
                 (.preventDefault event)
-                (update! editor editor/run (editor/event char key (.-shiftKey event) (.-ctrlKey event) (.-altKey event) (.-metaKey event)))))]
+                (update! editor editor/run input)))]
     (resize nil)
     (.addEventListener vsm EventType.RESIZE resize)
     (doto (KeyHandler. (dom/getDocument) true)

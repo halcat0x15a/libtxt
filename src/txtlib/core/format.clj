@@ -6,50 +6,26 @@
 
 (defrecord Color [foreground background])
 
-(defrecord Rectangle [x y width height])
-
-(defn rectangle
-  ([]
-     (Rectangle. 0 0 0 0))
-  ([x y width height]
-     (Rectangle. x y width height)))
-
 (def special
   {\< "&lt;"
    \> "&gt;"
    \& "&amp;"
    \newline (str \space \newline)})
 
-(defn span [string {:keys [foreground background]}]
-  (str "<span style=\"color:"
-       foreground
-       ";background-color:"
-       background
-       ";\">"
-       (string/escape string special)
-       "</span>"))
+(defn html
+  ([string foreground background]
+     (str "<span style=\"color:" foreground ";background-color:" background ";\">"
+          (string/escape string special)
+          "</span>"))
+  ([string fontsize]
+     (str "<pre id=\"txtlib\" style=\"font-size:" fontsize "px;\">"
+          string
+          "</pre>")))
 
-(defn pre [string {:keys [fontsize]}]
-  (str "<pre id=\"txtlib\" style=\"font-size:"
-       fontsize
-       "px;\">"
-       string
-       "</pre>"))
-
-(defn render
-  ([node format {:keys [color] :as style}]
-     (render node format style color))
-  ([{:keys [name value] :as node} format style color]
-     (cond (vector? node) (->> node (map #(render % format style color)) string/join)
-           (string? node) (format node color)
-           (and name value) (render value format style (get style name color)))))
-
-(defn compute [{:keys [x y width height] :as bounds} buffer]
-  (let [[a b] (buffer/position buffer)
-        height (dec height)]
-    (cond (< b y) (assoc bounds :y b)
-          (> b (+ y height)) (assoc bounds :y (- b height))
-          :else bounds)))
+(defn render [{:keys [name value] :as node} format style {:keys [foreground background] :as color}]
+  (cond (vector? node) (->> node (map #(render % format style color)) string/join)
+        (string? node) (format node foreground background)
+        (and name value) (render value format style (get style name color))))
 
 (defn buffer [buffer]
   (let [text (str (buffer/text buffer) \space)
@@ -69,3 +45,9 @@
           [(subs text 0 cursor)
            (Label. :cursor (subs text cursor (inc cursor)))
            (subs text (inc cursor))])))
+
+(def style
+  {:color (Color. "black" "white")
+   :cursor (Color. "white" "black")
+   :selection (Color. "white" "gray")
+   :fontsize 16})
