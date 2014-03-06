@@ -47,6 +47,7 @@
    \v editor/activate
    \d #(editor/keymap % (map-values (partial comp escape) delete))
    \/ command/search
+   \: command/command
    :default (fn [editor _] editor)})
 
 (def keymap (merge normal (map-values (partial comp #(editor/keymap % insert)) normal->insert)))

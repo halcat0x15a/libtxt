@@ -1,5 +1,6 @@
 (ns txtlib.jvm
-  (:require [txtlib.core.lens :as lens]
+  (:require [clojure.java.io :as io]
+            [txtlib.core.lens :as lens]
             [txtlib.core.buffer :as buffer]
             [txtlib.core.history :as history]
             [txtlib.core.format :as format]
@@ -14,6 +15,23 @@
            [javafx.scene Scene]
            [javafx.scene.web WebView WebEngine]
            [javafx.scene.input KeyCode KeyEvent]))
+
+(def ^:dynamic *stage*)
+
+(def system
+  (reify editor/OS
+    (open-dialog [system]
+      (.showOpenDialog (FileChooser.) *stage*))
+    (save-dialog [system]
+      (.showSaveDialog (FileChooser.) *stage*))
+    (exists [system path]
+      (.exists (io/file path)))
+    (read [system path]
+      (slurp path))
+    (write [system path content]
+      (spit path content))
+    (exit [system]
+      (Platform/exit))))
 
 (def special
   {KeyCode/BACK_SPACE :backspace
@@ -35,39 +53,15 @@
      (.isAltDown event)
      (.isMetaDown event))))
 
-(defn open [editor stage]
-  (if-let [file (.showOpenDialog (FileChooser.) stage)]
-    (editor/open editor (.getPath file) (slurp file))
-    editor))
-
-(defn write [editor file]
-  (spit file (editor/text editor))
-  editor)
-
-(defn save-as [editor stage]
-  (if-let [file (.showSaveDialog (FileChooser.) stage)]
-    (write editor file)
-    editor))
-
-(defn save [editor stage]
-  (if (editor/changed? editor)
-    (write editor (editor/id editor))
-    editor))
-
-(defn quit [editor]
-  (Platform/exit)
-  editor)
-
 (defn -start [this ^Stage stage]
-  (let [keymap {#{:O :ctrl} #(open % stage)
-                #{:S :ctrl} #(save % stage)
-                #{:Q :ctrl} quit}
-        editor (atom (lens/update vi/vi editor/keymap merge keymap))
+  (let [editor (atom vi/vi)
         view (doto (WebView.)
                (.setContextMenuEnabled false))
         key-press (reify EventHandler
                     (handle [this event]
-                      (swap! editor editor/run (input event))
+                      (binding [*stage* stage
+                                editor/*system* system]
+                        (swap! editor editor/run (input event)))
                       (-> view .getEngine (.loadContent (editor/render @editor format/html)))))
         scene (doto (Scene. view)
                 (.setOnKeyPressed key-press))]

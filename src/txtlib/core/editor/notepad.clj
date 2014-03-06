@@ -24,7 +24,9 @@
    #{:X :ctrl} editor/cut
    #{:V :ctrl} editor/paste
    #{:Z :ctrl} editor/undo
-   #{:F :ctrl} command/search})
+   #{:F :ctrl} command/search
+   #{:O :ctrl} editor/open
+   #{:Q :ctrl} editor/quit})
 
 (def keymap
   (merge (map-values #(comp editor/commit %) operation)

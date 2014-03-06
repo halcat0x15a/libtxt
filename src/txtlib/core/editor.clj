@@ -8,6 +8,23 @@
             [txtlib.core.geometry :as geometry]
             [txtlib.core.format :as format]))
 
+(defprotocol OS
+  (open-dialog [system])
+  (save-dialog [system])
+  (exists [system path])
+  (write [system path content])
+  (read [system path])
+  (exit [system]))
+
+(def ^:dynamic *system*
+  (reify OS
+    (open-dialog [system])
+    (save-dialog [system])
+    (exists [system path])
+    (write [system path content])
+    (read [system path])
+    (exit [system])))
+
 (defrecord Window [id bounds])
 
 (defn window [id]
@@ -130,10 +147,45 @@
       (update frame zip/right)
       (update buffers assoc key control)))
 
-(defn open [editor key string]
-  (-> editor
-      (update buffers assoc key (control string (keymap editor)))
-      (id key)))
+(defn open
+  ([editor]
+     (if-let [path (open-dialog *system*)]
+       (open editor path)
+       editor))
+  ([editor path]
+     (open editor path (read *system* path)))
+  ([editor key string]
+     (-> editor
+         (update buffers assoc key (control string (keymap editor)))
+         (id key))))
+
+(declare save save-as)
+
+(defn save
+  ([editor]
+     (let [path (id editor)]
+       (if (exists *system* path)
+         (save editor path)
+         (save-as editor))))
+  ([editor path]
+     (write *system* path (text editor))
+     editor))
+
+(defn save-as [editor]
+  (if-let [path (save-dialog *system*)]
+    (save editor path)
+    editor))
+
+(defn quit [editor]
+  (exit *system*)
+  editor)
+
+(def commands
+  {"open" open
+   "quit" quit})
+
+(defn execute [editor command & args]
+  (apply (get commands command (fn [editor & args] editor)) editor args))
 
 (defn compute [editor]
   (-> editor
