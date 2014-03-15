@@ -1,11 +1,11 @@
-(ns txtlib.web
+(ns libtxt.web
   (:require [clojure.string :as string]
             [goog.dom :as dom]
             [goog.object :as object]
             [goog.events :as events]
-            [txtlib.core.format :as format]
-            [txtlib.core.editor :as editor]
-            [txtlib.core.editor.notepad :as notepad])
+            [libtxt.core.format :as format]
+            [libtxt.core.editor :as editor]
+            [libtxt.core.editor.notepad :as notepad])
   (:import [goog.dom ViewportSizeMonitor]
            [goog.events EventType KeyCodes KeyHandler]))
 
@@ -21,7 +21,7 @@
 
 (defn render [editor]
   (dom/replaceNode (dom/htmlToDocumentFragment (editor/render editor format/html))
-                   (dom/getElement "txtlib")))
+                   (dom/getElement "libtxt")))
 
 (defn char-code [code]
   (if (pos? code)

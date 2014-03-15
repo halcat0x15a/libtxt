@@ -1,9 +1,9 @@
-(ns txtlib.test.buffer
+(ns libtxt.test.buffer
   (:refer-clojure :exclude [key])
   (:require [clojure.test :refer :all]
             [clojure.test.generative :refer :all]
             [clojure.data.generators :as gen]
-            [txtlib.core.buffer :as buffer]))
+            [libtxt.core.buffer :as buffer]))
 
 (defn buffer []
   (buffer/buffer (gen/string) (gen/string)))

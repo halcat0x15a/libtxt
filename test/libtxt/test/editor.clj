@@ -1,9 +1,9 @@
-(ns txtlib.test.editor
+(ns libtxt.test.editor
   (:require [clojure.test :refer :all]
             [clojure.test.generative :refer :all]
             [clojure.data.generators :as gen]
-            [txtlib.core.editor :as editor]
-            [txtlib.core.editor.notepad :as notepad]))
+            [libtxt.core.editor :as editor]
+            [libtxt.core.editor.notepad :as notepad]))
 
 (defn editor []
   (gen/rand-nth [notepad/notepad]))

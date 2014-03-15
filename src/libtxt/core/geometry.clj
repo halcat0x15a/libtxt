@@ -1,4 +1,4 @@
-(ns txtlib.core.geometry
+(ns libtxt.core.geometry
   (:require [clojure.string :as string]))
 
 (defprotocol Shape

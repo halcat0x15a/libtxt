@@ -1,4 +1,4 @@
-(ns txtlib.core.parser
+(ns libtxt.core.parser
   (:refer-clojure :exclude [not map]))
 
 (defprotocol Functor

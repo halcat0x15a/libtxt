@@ -1,8 +1,8 @@
-(ns txtlib.test.history
+(ns libtxt.test.history
   (:require [clojure.zip :as zip]
             [clojure.data.generators :as gen]
             [clojure.test.generative :refer :all]
-            [txtlib.core.history :as history]))
+            [libtxt.core.history :as history]))
 
 (defn history []
   (history/root (gen/anything)))

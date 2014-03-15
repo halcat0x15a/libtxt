@@ -1,9 +1,9 @@
-(ns txtlib.core.editor.vi
-  (:require [txtlib.core :refer [map-values]]
-            [txtlib.core.buffer :as buffer]
-            [txtlib.core.format :as format]
-            [txtlib.core.editor :as editor]
-            [txtlib.core.editor.command :as command]))
+(ns libtxt.core.editor.vi
+  (:require [libtxt.core :refer [map-values]]
+            [libtxt.core.buffer :as buffer]
+            [libtxt.core.format :as format]
+            [libtxt.core.editor :as editor]
+            [libtxt.core.editor.command :as command]))
 
 (declare keymap)
 

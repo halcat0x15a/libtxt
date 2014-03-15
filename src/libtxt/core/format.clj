@@ -1,6 +1,6 @@
-(ns txtlib.core.format
+(ns libtxt.core.format
   (:require [clojure.string :as string]
-            [txtlib.core.buffer :as buffer]))
+            [libtxt.core.buffer :as buffer]))
 
 (defrecord Label [name value])
 
@@ -18,7 +18,7 @@
           (string/escape string special)
           "</span>"))
   ([string fontsize]
-     (str "<pre id=\"txtlib\" style=\"font-size:" fontsize "px;\">"
+     (str "<pre id=\"libtxt\" style=\"font-size:" fontsize "px;\">"
           string
           "</pre>")))
 

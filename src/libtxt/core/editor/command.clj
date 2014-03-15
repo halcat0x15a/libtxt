@@ -1,9 +1,9 @@
-(ns txtlib.core.editor.command
+(ns libtxt.core.editor.command
   (:require [clojure.string :as string]
-            [txtlib.core.lens :refer [lens update compose]]
-            [txtlib.core.buffer :as buffer]
-            [txtlib.core.history :as history]
-            [txtlib.core.editor :as editor]))
+            [libtxt.core.lens :refer [lens update compose]]
+            [libtxt.core.buffer :as buffer]
+            [libtxt.core.history :as history]
+            [libtxt.core.editor :as editor]))
 
 (def function (compose (lens :function) editor/current))
 

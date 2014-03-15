@@ -1,4 +1,4 @@
-(ns txtlib.core.lens
+(ns libtxt.core.lens
   (:require [clojure.zip :as zip]))
 
 (defn lens [key]

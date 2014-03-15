@@ -1,12 +1,12 @@
-(ns txtlib.core.editor
+(ns libtxt.core.editor
   (:refer-clojure :exclude [read newline])
   (:require [clojure.string :as string]
             [clojure.zip :as zip]
-            [txtlib.core.lens :refer [update compose lens zipper]]
-            [txtlib.core.buffer :as buffer]
-            [txtlib.core.history :as history]
-            [txtlib.core.geometry :as geometry]
-            [txtlib.core.format :as format]))
+            [libtxt.core.lens :refer [update compose lens zipper]]
+            [libtxt.core.buffer :as buffer]
+            [libtxt.core.history :as history]
+            [libtxt.core.geometry :as geometry]
+            [libtxt.core.format :as format]))
 
 (defprotocol OS
   (open-dialog [system])

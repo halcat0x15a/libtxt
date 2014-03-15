@@ -1,4 +1,4 @@
-(ns txtlib.core
+(ns libtxt.core
   (:require [clojure.walk :as walk]))
 
 (defn map-values [f map]

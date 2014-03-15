@@ -1,12 +1,12 @@
-(ns txtlib.jvm
+(ns libtxt.jvm
   (:require [clojure.java.io :as io]
-            [txtlib.core.lens :as lens]
-            [txtlib.core.buffer :as buffer]
-            [txtlib.core.history :as history]
-            [txtlib.core.format :as format]
-            [txtlib.core.editor :as editor]
-            [txtlib.core.editor.notepad :as notepad]
-            [txtlib.core.editor.vi :as vi])
+            [libtxt.core.lens :as lens]
+            [libtxt.core.buffer :as buffer]
+            [libtxt.core.history :as history]
+            [libtxt.core.format :as format]
+            [libtxt.core.editor :as editor]
+            [libtxt.core.editor.notepad :as notepad]
+            [libtxt.core.editor.vi :as vi])
   (:gen-class :extends javafx.application.Application)
   (:import [javafx.application Application Platform]
            [javafx.beans.value ChangeListener]
@@ -72,9 +72,9 @@
                          (swap! editor assoc :height (int (/ new 16)))
                          (swap! editor editor/compute)))))
     (doto stage
-      (.setTitle "txtlib")
+      (.setTitle "libtxt")
       (.setScene scene)
       (.show))))
 
 (defn -main [& args]
-  (Application/launch txtlib.jvm args))
+  (Application/launch libtxt.jvm args))

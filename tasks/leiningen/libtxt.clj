@@ -1,4 +1,4 @@
-(ns leiningen.txtlib
+(ns leiningen.libtxt
   (:refer-clojure :exclude [test])
   (:require [clojure.java.io :as io]
             [leiningen.core.eval :as eval]
@@ -31,8 +31,8 @@
                    {{{[cljs] :source-paths} :main} :builds} :cljsbuild
                    :as project}
                   & args]
-  (let [src (path clj "txtlib" "core")
-        src-cljs (path cljs "txtlib" "core")]
+  (let [src (path clj "libtxt" "core")
+        src-cljs (path cljs "libtxt" "core")]
     (delete src-cljs)
     (doseq [clj (->> src paths (filter #(.endsWith (str %) "clj")))]
       (let [cljs (path (str (.resolve src-cljs (.relativize src clj)) \s))]
@@ -50,5 +50,5 @@
                            '(require '[clojure.test.generative.runner :as runner]))
      (test/test project)))
 
-(defn txtlib [project task & args]
+(defn libtxt [project task & args]
   (apply (case task "test" test "cljsbuild" cljsbuild) project args))

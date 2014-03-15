@@ -1,4 +1,4 @@
-(ns txtlib.core.history
+(ns libtxt.core.history
   (:require [clojure.zip :as zip]))
 
 (defn root [value]

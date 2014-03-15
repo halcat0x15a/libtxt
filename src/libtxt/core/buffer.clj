@@ -1,4 +1,4 @@
-(ns txtlib.core.buffer
+(ns libtxt.core.buffer
   (:refer-clojure :exclude [empty])
   (:require [clojure.string :as string]))
 

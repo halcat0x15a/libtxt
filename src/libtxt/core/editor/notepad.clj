@@ -1,9 +1,9 @@
-(ns txtlib.core.editor.notepad
-  (:require [txtlib.core :refer [map-values map-keys]]
-            [txtlib.core.buffer :as buffer]
-            [txtlib.core.editor :as editor]
-            [txtlib.core.editor.command :as command]
-            [txtlib.core.format :as format]))
+(ns libtxt.core.editor.notepad
+  (:require [libtxt.core :refer [map-values map-keys]]
+            [libtxt.core.buffer :as buffer]
+            [libtxt.core.editor :as editor]
+            [libtxt.core.editor.command :as command]
+            [libtxt.core.format :as format]))
 
 (def edit
   {#{:enter} editor/newline
