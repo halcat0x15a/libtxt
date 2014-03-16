@@ -40,7 +40,9 @@
     (loop [result [] input input]
       (let [{:keys [value next]} (parser input)]
         (if (= input next)
-          (Success. result input)
+          (if (empty? result)
+            (Failure. input)
+            (Success. result input))
           (recur (conj result value) next))))))
 
 (defn not [parser]

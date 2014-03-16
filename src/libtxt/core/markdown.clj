@@ -1,7 +1,6 @@
 (ns libtxt.core.markdown
   (:refer-clojure :exclude [compile])
-  (:require [clojure.string :as string]
-            [libtxt.core.parser :as parser]
+  (:require [libtxt.core.parser :as parser]
             [libtxt.core.html :as html]))
 
 (defn indent [size]
