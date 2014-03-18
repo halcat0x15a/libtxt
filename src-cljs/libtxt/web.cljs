@@ -7,7 +7,8 @@
             [libtxt.core.editor :as editor]
             [libtxt.core.editor.notepad :as notepad])
   (:import [goog.dom ViewportSizeMonitor]
-           [goog.events EventType KeyCodes KeyHandler]))
+           [goog.events EventType KeyCodes KeyHandler]
+           [goog.fs FileReader]))
 
 (def special
   {KeyCodes.ENTER :enter
@@ -32,6 +33,13 @@
       string/upper-case
       keyword))
 
+(def file (dom/createDom "input" #js{"type" "file"}))
+
+(defn read [file]
+  (doto (FileReader.)
+    (.addEventListener FileReader.EventType.LOAD_END (fn [result] (.log js/console result)))
+    (.readAsText file)))
+
 (defn main []
   (let [editor (atom notepad/notepad)
         vsm (ViewportSizeMonitor.)
@@ -48,7 +56,8 @@
                                         (.-altKey event)
                                         (.-metaKey event))]
                 (.preventDefault event)
-                (update! editor editor/run input)))]
+                (swap! editor editor/run input)
+                (render @editor)))]
     (resize nil)
     (.addEventListener vsm EventType.RESIZE resize)
     (doto (KeyHandler. (dom/getDocument) true)

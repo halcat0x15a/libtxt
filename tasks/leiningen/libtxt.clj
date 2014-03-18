@@ -27,6 +27,9 @@
       (Files/deleteIfExists path))
     (Files/deleteIfExists path)))
 
+(defn- copy [src dst]
+  (Files/copy src dst (make-array CopyOption 0)))
+
 (defn- cljsbuild [{[clj] :source-paths
                    {{{[cljs] :source-paths} :main} :builds} :cljsbuild
                    :as project}
@@ -37,7 +40,8 @@
     (doseq [clj (->> src paths (filter #(.endsWith (str %) "clj")))]
       (let [cljs (path (str (.resolve src-cljs (.relativize src clj)) \s))]
         (Files/createDirectories (.getParent cljs) (make-array FileAttribute 0))
-        (Files/copy clj cljs (make-array CopyOption 0))))
+        (copy clj cljs)))
+    (copy (.resolveSibling src "core.clj") (.resolve (.getParent src-cljs) "core.cljs"))
     (apply cljsbuild/cljsbuild project args)))
 
 (defn- test

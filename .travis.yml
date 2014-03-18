@@ -1,3 +1,3 @@
 language: clojure
 lein: lein2
-script: lein2 txtlib test 60000
+script: lein2 libtxt test 60000

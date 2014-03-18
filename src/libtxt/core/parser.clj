@@ -2,15 +2,19 @@
   (:refer-clojure :exclude [not map]))
 
 (defprotocol Functor
-  (map [m f]))
+  (fmap [m f]))
 
 (defrecord Success [value next]
   Functor
-  (map [success f] (Success. (f value) next)))
+  (fmap [success f] (Success. (f value) next)))
 
 (defrecord Failure [next]
   Functor
-  (map [failure f] failure))
+  (fmap [failure f] failure))
+
+(defn map [f parser]
+  (fn [input]
+    (fmap (parser input) f)))
 
 (defn- extract [x]
   (cond (string? x) x
@@ -19,8 +23,8 @@
 (defn regex
   ([pattern] (partial regex pattern))
   ([pattern input]
-     (if-let [result (->> input (re-find pattern) extract)]
-       (Success. result (subs input (count result)))
+     (if-let [result (re-find pattern input)]
+       (Success. result (subs input (count (extract result))))
        (Failure. input))))
 
 (defn string
@@ -56,10 +60,10 @@
 
 (defn chain [f parser & parsers]
   (fn [input]
-    (loop [{:keys [value next] :as result} (map (parser input) (partial partial f))
+    (loop [{:keys [value next] :as result} (fmap (parser input) (partial partial f))
            [parser & parsers] parsers]
-      (cond (and value (nil? parser)) (map result #(%))
-            value (recur (map (parser next) (partial partial value)) parsers)
+      (cond (and value (nil? parser)) (fmap result #(%))
+            value (recur (fmap (parser next) (partial partial value)) parsers)
             :else (Failure. input)))))
 
 (defn one [input]
