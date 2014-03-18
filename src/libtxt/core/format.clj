@@ -15,10 +15,11 @@
 (defn html
   ([string foreground background]
      (str "<span style=\"color:" foreground ";background-color:" background ";\">"
-          (string/escape string special)
+          ;(string/escape string special)
+          string
           "</span>"))
   ([string fontsize]
-     (str "<pre id=\"libtxt\" style=\"font-size:" fontsize "px;\">"
+     (str "<pre style=\"font-size:" fontsize "px;\">"
           string
           "</pre>")))
 

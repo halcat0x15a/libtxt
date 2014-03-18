@@ -3,25 +3,24 @@
 
 (declare html)
 
-(defn attribute [name value]
-  (str name "='" value "'"))
+(defprotocol Html
+  (show [html]))
 
-(defn element [tag value & attributes]
-  (str "<" tag (->> attributes (partition 2) (map (partial apply attribute)) (interleave (repeat \space)) string/join) ">" (html value) "</" tag ">"))
+(defn attribute [key val]
+  (str key "=\"" val "\""))
 
-(defmulti label->element (fn [{:keys [name value]}] name))
-(defmethod label->element :header [{:keys [value] :as label}]
-  (element (str "h" (:rank (meta label))) value))
-(defmethod label->element :anchor [{:keys [value] :as label}]
-  (element "a" value "href" (:url (meta label))))
-(defmethod label->element :list-item [{:keys [value]}]
-  (element "li" value))
-(defmethod label->element :unordered-list [{:keys [value]}]
-  (element "ul" value))
-(defmethod label->element :paragraph [{:keys [value]}]
-  (element "p" value))
+(defn attributes [keyvals]
+  (->> keyvals (map (partial apply attribute)) (interleave (repeat \space)) string/join))
 
-(defn html [{:keys [name value] :as node}]
+(defn element [tag value keyvals]
+  (str "<" tag (attributes keyvals) ">" (html value) "</" tag ">"))
+
+(deftype Element [tag value attributes]
+  Html
+  (show [this]
+    (element tag value attributes)))
+
+(defn html [node]
   (cond (vector? node) (string/join (map html node))
         (string? node) node
-        (and name value) (label->element node)))
+        (satisfies? Html node) (show node)))

@@ -5,6 +5,7 @@
             [libtxt.core.history :as history]
             [libtxt.core.format :as format]
             [libtxt.core.editor :as editor]
+            [libtxt.core.editor.slide :as slide]
             [libtxt.core.editor.notepad :as notepad]
             [libtxt.core.editor.vi :as vi])
   (:gen-class :extends javafx.application.Application)
@@ -65,6 +66,7 @@
                       (-> view .getEngine (.loadContent (editor/render @editor format/html)))))
         scene (doto (Scene. view)
                 (.setOnKeyPressed key-press))]
+    (swap! editor/commands assoc "slide" slide/start)
     (.. view
         heightProperty
         (addListener (reify ChangeListener

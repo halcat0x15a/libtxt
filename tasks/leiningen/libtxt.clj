@@ -35,13 +35,15 @@
                    :as project}
                   & args]
   (let [src (path clj "libtxt" "core")
-        src-cljs (path cljs "libtxt" "core")]
+        src-cljs (path cljs "libtxt" "core")
+        core (.resolve (.getParent src-cljs) "core.cljs")]
     (delete src-cljs)
+    (delete core)
     (doseq [clj (->> src paths (filter #(.endsWith (str %) "clj")))]
       (let [cljs (path (str (.resolve src-cljs (.relativize src clj)) \s))]
         (Files/createDirectories (.getParent cljs) (make-array FileAttribute 0))
         (copy clj cljs)))
-    (copy (.resolveSibling src "core.clj") (.resolve (.getParent src-cljs) "core.cljs"))
+    (copy (.resolveSibling src "core.clj") core)
     (apply cljsbuild/cljsbuild project args)))
 
 (defn- test

@@ -179,13 +179,13 @@
 (defn quit [editor]
   (exit *system*)
   editor)
-
+; TODO: add field to record
 (def commands
-  {"open" open
-   "quit" quit})
+  (atom {"open" open
+         "quit" quit}))
 
 (defn execute [editor command & args]
-  (apply (get commands command (fn [editor & args] editor)) editor args))
+  (apply (get @commands command (fn [editor & args] editor)) editor args))
 
 (defn compute [editor]
   (-> editor

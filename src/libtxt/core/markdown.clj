@@ -14,7 +14,7 @@
 (def anchor
   (parser/map
     (fn [[_ text ref]]
-      (html/element "p" (html/element "a" text "href" ref)))
+      (html/->Element "p" (html/->Element "a" text {"href" ref}) {}))
     (parser/regex #"^\[(\S+)\]\((\S+)\)")))
 
 (def inline
@@ -25,7 +25,7 @@
 (def header
   (parser/chain
     (fn [header _ text]
-      (html/element (str "h" (count header)) text))
+      (html/->Element (str "h" (count header)) text {}))
     (parser/regex #"^#+")
     space
     inline))
@@ -33,7 +33,7 @@
 (defn list-item [size]
   (parser/chain
     (fn [_ _ _ text _]
-      (html/element "li" text))
+      (html/->Element "li" text {}))
      (indent size)
      (parser/regex #"^[\*\+\-]")
      space
@@ -43,16 +43,14 @@
 (defn unordered-list [size]
   (parser/chain
     (fn [item items]
-      (html/element "ul" (str item (string/join items))))
+      (html/->Element "ul" (vec (cons item items)) {}))
     (list-item size)
     (parser/many (parser/choice (list-item size) (fn [input] ((unordered-list (inc size)) input))))))
 
 (def markdown
-  (parser/choice
-    header
-    (unordered-list 0)
-    inline
-    end))
-
-(defn compile [parser]
-  (parser/map string/join (parser/many parser)))
+  (parser/many
+    (parser/choice
+      header
+      (unordered-list 0)
+      inline
+      end)))
