@@ -17,9 +17,23 @@
       (html/->Element "p" (html/->Element "a" text {"href" ref}) {}))
     (parser/regex #"^\[(\S+)\]\((\S+)\)")))
 
+(def emphasis
+  (parser/map
+    (fn [[_ text]]
+      (html/->Element "em" text {}))
+    (parser/regex #"^\*(.+)\*")))
+
+(def code
+  (parser/map
+    (fn [[_ text]]
+      (html/->Element "pre" (html/->Element "code" text {}) {}))
+    (parser/regex #"^`(.+)`")))
+
 (def inline
   (parser/choice
     anchor
+    emphasis
+    code
     (parser/regex #"^.+")))
 
 (def header

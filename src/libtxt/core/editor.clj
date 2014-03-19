@@ -182,7 +182,8 @@
 ; TODO: add field to record
 (def commands
   (atom {"open" open
-         "quit" quit}))
+         "quit" quit
+         "font" (fn [editor size] (update-in editor [:style] assoc :fontsize size))}))
 
 (defn execute [editor command & args]
   (apply (get @commands command (fn [editor & args] editor)) editor args))
