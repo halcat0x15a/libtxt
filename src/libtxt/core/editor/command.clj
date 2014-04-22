@@ -26,7 +26,7 @@
 (defrecord Control [buffer history keymap label function target])
 
 (defn control [editor label function]
-  (Control. buffer/empty (history/root buffer/empty) keymap label function (editor/id editor)))
+  (Control. (buffer/buffer) (history/root (buffer/buffer)) keymap label function (editor/id editor)))
 
 (defn search [editor]
   (editor/minibuffer editor "*search*" (control editor "search" editor/search)))

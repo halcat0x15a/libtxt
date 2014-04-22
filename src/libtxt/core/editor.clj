@@ -33,7 +33,7 @@
 (defrecord Control [buffer history keymap])
 
 (defn control [string keymap]
-  (Control. (buffer/buffer string) (history/root buffer/empty) keymap))
+  (Control. (buffer/buffer string) (history/root (buffer/buffer)) keymap))
 
 (def frame (lens :frame))
 
@@ -79,13 +79,13 @@
   (update editor buffer buffer/insert key value))
 
 (defn newline [editor]
-  (insert editor :left \newline))
+  (insert editor buffer/left \newline))
 
 (defn delete [editor key regex]
   (update editor buffer buffer/matches buffer/delete key regex))
 
 (defn backspace [editor]
-  (delete editor :left buffer/character))
+  (delete editor buffer/left buffer/character))
 
 (defn move [editor key regex]
   (update editor buffer buffer/matches buffer/move key regex))
@@ -104,9 +104,9 @@
 
 (defn select-all [editor]
   (-> editor
-      (move :left buffer/all)
+      (move buffer/left buffer/all)
       mark
-      (move :right buffer/all)))
+      (move buffer/right buffer/all)))
 
 (defn copy [editor]
   (if-let [string (-> editor buffer buffer/copy)]
@@ -117,7 +117,7 @@
   (-> editor copy (update buffer buffer/cut)))
 
 (defn paste [editor]
-  (insert editor :left (-> editor clipboard zip/node)))
+  (insert editor buffer/left (-> editor clipboard zip/node)))
 
 (defn undo [editor]
   (-> editor
@@ -192,7 +192,7 @@
   (-> editor
       (update bounds assoc :width (width editor))
       (update bounds assoc :height (height editor))
-      (update bounds geometry/fix (-> editor buffer buffer/position))))
+      #_(update bounds geometry/fix (-> editor buffer buffer/position))))
 
 (defrecord Event [char code modifiers])
 

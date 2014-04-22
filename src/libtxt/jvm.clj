@@ -19,7 +19,7 @@
 
 (def ^:dynamic *stage*)
 
-(def system
+(defn system []
   (reify editor/OS
     (open-dialog [system]
       (.showOpenDialog (FileChooser.) *stage*))
@@ -61,7 +61,7 @@
         key-press (reify EventHandler
                     (handle [this event]
                       (binding [*stage* stage
-                                editor/*system* system]
+                                editor/*system* (system)]
                         (swap! editor editor/run (input event)))
                       (-> view .getEngine (.loadContent (editor/render @editor format/html)))))
         scene (doto (Scene. view)

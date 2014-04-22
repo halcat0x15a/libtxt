@@ -26,3 +26,9 @@
      (rect 0 0 0 0))
   ([x y width height]
      (Rectangle. x y width height)))
+
+(defn cut [lines {:keys [x y width height]}]
+  (->> lines
+       (drop y)
+       (take height)
+       (map (fn [line] (subs line x (max width (count line)))))))

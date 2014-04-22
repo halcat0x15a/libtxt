@@ -3,31 +3,37 @@
   (:require [clojure.test :refer :all]
             [clojure.test.generative :refer :all]
             [clojure.data.generators :as gen]
-            [libtxt.core.buffer :as buffer]))
-
-(defn buffer []
-  (buffer/buffer (gen/string) (gen/string)))
+            [libtxt.core.buffer :as buffer]
+            [libtxt.core.buffer.zipper :as zipper]
+            [libtxt.jvm.buffer :as jvm]))
 
 (defn key []
-  (gen/rand-nth [:left :right]))
+  (gen/rand-nth [buffer/left buffer/right]))
 
-(defn regex []
-  (gen/rand-nth [buffer/character buffer/line buffer/word buffer/characters buffer/all]))
+(defn zipper []
+  (zipper/buffer (gen/string) (gen/string)))
 
-(defspec double-opposite
-  (comp buffer/opposite buffer/opposite)
-  [^{:tag `key} key]
-  (assert (= % key)))
+(defn nio []
+  (jvm/buffer (gen/string)))
+
+(defn buffer []
+  ((gen/rand-nth [zipper nio])))
+
+(defspec insert-and-delete
+  (fn [buffer key value]
+    (delay (-> buffer (buffer/insert key value) (buffer/delete key (count value)))))
+  [^{:tag `buffer} buffer ^{:tag `key} key ^string value]
+  (assert (= (buffer/text buffer) (buffer/text @%))))
 
 (defspec preserving-move
-  (fn [buffer key regex]
-    (buffer/matches buffer buffer/move key regex))
-  [^{:tag `buffer} buffer ^{:tag `key} key ^{:tag `regex} regex]
-  (assert (= (buffer/text %) (buffer/text buffer))))
+  (fn [buffer n]
+    (delay (buffer/move buffer n)))
+  [^{:tag `buffer} buffer ^int n]
+  (assert (= (buffer/text buffer) (buffer/text @%))))
 
 (defspec copy-and-paste
-  (fn [buffer key regex]
-    (let [buffer (-> buffer buffer/mark (buffer/matches buffer/move key regex))]
+  (fn [buffer key n]
+    (let [buffer (-> buffer buffer/mark (buffer/move key n))]
       (-> buffer buffer/cut (buffer/insert key (buffer/copy buffer)))))
-  [^{:tag `buffer} buffer ^{:tag `key} key ^{:tag `regex} regex]
+  [^{:tag `buffer} buffer ^{:tag `key} key ^int n]
   (assert (= (buffer/text %) (buffer/text buffer))))
