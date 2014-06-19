@@ -14,7 +14,7 @@
 (defn event []
   (editor/event (gen/char) (gen/keyword) (gen/set modifier)))
 
-(defspec run
+#_(defspec run
   editor/run
   [^{:tag `editor} editor ^{:tag `event} event]
   (assert (and (editor/buffer %)

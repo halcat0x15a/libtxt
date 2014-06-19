@@ -6,6 +6,11 @@
 
 (defrecord Color [foreground background])
 
+(def *style* ^:dynamic
+  {:color (Color. "black" "white")
+   :cursor (Color. "white" "black")
+   :selection (Color. "white" "gray")})
+
 (def special
   {\< "&lt;"
    \> "&gt;"
@@ -23,12 +28,27 @@
           string
           "</pre>")))
 
-(defn render [{:keys [name value] :as node} format style {:keys [foreground background] :as color}]
+#_(defn render [{:keys [name value] :as node} format style {:keys [foreground background] :as color}]
   (cond (vector? node) (->> node (map #(render % format style color)) string/join)
         (string? node) (format node foreground background)
         (and name value) (render value format style (get style name color))))
 
+(defn render [source format style]
+  (let [source (transient (vec (str source \space)))]
+    (->> style
+         (reduce (fn [_ [index {:keys [foreground background]}]]
+                   (prn index)
+                   (assoc! source index (format (nth source index) foreground background)))
+                 style)
+         persistent!
+         string/join)))
+
 (defn buffer [buffer]
+  (assoc (if-let [[start end] (buffer/selection buffer)]
+           (zipmap (range start end) (repeat :selection)))
+    (buffer/cursor buffer) :cursor))
+
+#_(defn buffer [buffer]
   (let [text (str (buffer/text buffer) \space)
         cursor (buffer/cursor buffer)
         [start end :as selection] (buffer/selection buffer)]
@@ -47,8 +67,4 @@
            (Label. :cursor (subs text cursor (inc cursor)))
            (subs text (inc cursor))])))
 
-(def style
-  {:color (Color. "black" "white")
-   :cursor (Color. "white" "black")
-   :selection (Color. "white" "gray")
-   :fontsize 16})
+(render "hello" html (buffer (libtxt.core.buffer/buffer "hello")))

@@ -18,29 +18,33 @@
 
 (def delete
   {#{:escape} escape
-   \h #(editor/move % :right buffer/character)
-   \l #(editor/move % :left buffer/character)
-   \w #(editor/delete % :right buffer/word)
-   \b #(editor/delete % :left buffer/word)
+   \h #(editor/move % buffer/right buffer/character)
+   \l #(editor/move % buffer/left buffer/character)
+   \w #(editor/delete % buffer/right buffer/word)
+   \b #(editor/delete % buffer/left buffer/word)
    :default (fn [editor _] editor)})
 
 (def normal->insert
   {\i identity
-   \a #(editor/move % :right buffer/character)
-   \I #(editor/move % :left buffer/characters)
-   \A #(editor/move % :right buffer/characters)
-   \o #(-> % (editor/move :right buffer/characters) (editor/insert :left \newline))
-   \O #(-> % (editor/move :left buffer/characters) (editor/insert :right \newline))})
+   \a #(editor/move % buffer/right buffer/character)
+   \I #(editor/move % buffer/left buffer/characters)
+   \A #(editor/move % buffer/right buffer/characters)
+   \o #(-> %
+           (editor/move buffer/right buffer/characters)
+           (editor/insert buffer/left \newline))
+   \O #(-> %
+           (editor/move buffer/left buffer/characters)
+           (editor/insert buffer/right \newline))})
 
 (def normal
-  {\h #(editor/move % :left buffer/character)
-   \j #(editor/move % :right buffer/line)
-   \k #(editor/move % :left buffer/line)
-   \l #(editor/move % :right buffer/character)
-   \w #(editor/move % :right buffer/word)
-   \b #(editor/move % :left buffer/word)
-   \x #(editor/delete % :right buffer/character)
-   \X #(editor/delete % :left buffer/character)
+  {\h #(editor/move % buffer/left buffer/character)
+   \j #(editor/move % buffer/right buffer/line)
+   \k #(editor/move % buffer/left buffer/line)
+   \l #(editor/move % buffer/right buffer/character)
+   \w #(editor/move % buffer/right buffer/word)
+   \b #(editor/move % buffer/left buffer/word)
+   \x #(editor/delete % buffer/right buffer/character)
+   \X #(editor/delete % buffer/left buffer/character)
    \u editor/undo
    \y editor/copy
    \p editor/paste

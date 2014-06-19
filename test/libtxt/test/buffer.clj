@@ -1,7 +1,6 @@
 (ns libtxt.test.buffer
   (:refer-clojure :exclude [key])
-  (:require [clojure.test :refer :all]
-            [clojure.test.generative :refer :all]
+  (:require [clojure.test.generative :refer :all]
             [clojure.data.generators :as gen]
             [libtxt.core.buffer :as buffer]
             [libtxt.core.buffer.zipper :as zipper]

@@ -14,7 +14,7 @@
            [javafx.event EventHandler]
            [javafx.stage Stage FileChooser]
            [javafx.scene Scene]
-           [javafx.scene.web WebView WebEngine]
+           [javafx.scene.web WebView]
            [javafx.scene.input KeyCode KeyEvent]))
 
 (def ^:dynamic *stage*)

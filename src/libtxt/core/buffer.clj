@@ -17,7 +17,7 @@
     (left [zipper] left)
     (right [zipper] right)))
 
-(defn sig [n]
+(defn- sig [n]
   (reify protocol/Zipper
     (left [zipper] (- n))
     (right [zipper] n)))
@@ -83,7 +83,7 @@
 
 (defn matches [buffer f key regex]
   (if-let [result (second (re-find (key regex) (key buffer)))]
-    (f buffer (key (sig (count result))))
+    (f buffer key (count result))
     buffer))
 
 (defn selection [buffer]
@@ -102,9 +102,10 @@
 
 (defn search [buffer key ^String query]
   (let [^String string (key buffer)
-        n (case key
-            :left (.lastIndexOf string query)
-            :right (.indexOf string query))]
+        n (key
+           (reify protocol/Zipper
+             (left [zipper] (.lastIndexOf string query))
+             (right [zipper] (.indexOf string query))))]
     (if (pos? n)
       (move buffer key n)
       buffer)))

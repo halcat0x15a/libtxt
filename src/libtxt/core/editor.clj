@@ -8,6 +8,8 @@
             [libtxt.core.geometry :as geometry]
             [libtxt.core.format :as format]))
 
+(def ^:dynamic *keymap* {})
+
 (defprotocol OS
   (open-dialog [system])
   (save-dialog [system])
@@ -218,16 +220,10 @@
     editor))
 
 (defn render [editor format]
-  (let [render (fn [control bounds]
-                 (let [{:keys [color fontsize] :as style} (:style editor)]
-                   (format (geometry/view bounds
-                                          (-> control
-                                              :buffer
-                                              format/buffer
-                                              (format/render format style color)))
-                           fontsize)))
+  (let [render (fn [buffer bounds]
+                 (format/render (buffer/text buffer) format (format/buffer buffer)))
         frame (frame editor)]
     (->> frame
          zip/root
-         (map #(render (get (buffers editor) (:id %)) (:bounds %)))
+         (map #(render (:buffer (get (buffers editor) (:id %))) (:bounds %)))
          (string/join \newline))))

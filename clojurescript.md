@@ -15,7 +15,7 @@
 * Macro
 * *Java Interop*
 
-`(.alter js/window "hello world")`
+`(.alert js/window "hello world")`
 
 !SLIDE
 
